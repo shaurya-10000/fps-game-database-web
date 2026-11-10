@@ -35,6 +35,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check build env
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          if [ -z "$MONGODB_URI" ]; then echo "MONGODB_URI secret is EMPTY"; exit 1; else echo "MONGODB_URI secret is set"; fi
+
       - name: Build
         run: npm run build
         env:
