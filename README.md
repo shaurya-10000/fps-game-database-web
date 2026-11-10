@@ -4,7 +4,7 @@
 
 A server-rendered reference catalog (weapons, characters, maps, modes, throwables, equipment), a live leaderboard, and a realtime dashboard with DMs, group chats, voice and video calls, friends, presence and progression. Built on Next.js 16 (App Router), MongoDB for the catalog, Socket.IO for realtime, and WebRTC for peer-to-peer calls.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit-success?style=for-the-badge&logo=vercel&logoColor=white)](https://YOUR_DEPLOY_URL)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit-success?style=for-the-badge&logo=vercel&logoColor=white)](https://fps-game-database-web.vercel.app)
 [![Demo Video](https://img.shields.io/badge/Demo_Video-Watch-red?style=for-the-badge&logo=youtube&logoColor=white)](https://YOUR_VIDEO_URL)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
 
@@ -14,10 +14,11 @@ A server-rendered reference catalog (weapons, characters, maps, modes, throwable
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-Realtime-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io)
 [![WebRTC](https://img.shields.io/badge/WebRTC-Calls-333333?style=flat-square&logo=webrtc&logoColor=white)](https://webrtc.org)
 [![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![CI](https://img.shields.io/github/actions/workflow/status/shaurya-10000/fps-game-database-web/ci.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/shaurya-10000/fps-game-database-web/actions/workflows/ci.yml)
 
 <img src="docs/assets/hero.png" alt="FPS Database home with the hero, roster, and live rankings" width="880" />
 
-[**Live demo**](https://YOUR_DEPLOY_URL) · [**Walkthrough**](https://YOUR_VIDEO_URL) · [**Backend repo**](https://github.com/shaurya-10000/fps-game-database) · [**Architecture**](#architecture) · [**Quick start**](#quick-start)
+[**Live demo**](https://fps-game-database-web.vercel.app) · [**Walkthrough**](https://YOUR_VIDEO_URL) · [**Backend repo**](https://github.com/shaurya-10000/fps-game-database) · [**Architecture**](#architecture) · [**Quick start**](#quick-start)
 
 > **Two repos, one product.** This repo is the web frontend. The backend ([`fps-game-database`](https://github.com/shaurya-10000/fps-game-database)) owns the REST API, Socket.IO server, match recording, ratings and the social graph. This app consumes it and additionally reads the catalog straight from MongoDB.
 
@@ -405,7 +406,7 @@ Both channels are mounted by `ChatNotifier` in the dashboard layout.
 
 - **Desktop notifications** go through `showNotification()`, which requires `Notification.permission === "granted"`, honors snooze (`isSnoozed`) and per-chat mute (`isMuted`), and uses `onlyWhenHidden: true` so nothing fires while the app is focused.
 - **Sounds** are synthesized by `callSounds.playMessage()` (two-tone chime). Ringtone and ringback loop until the call is answered, declined or ended. `SoundBanner` unlocks audio on one click, and `useCallFeedback` handles tab-title flashing and vibration.
-- **Permission prompt.** `NotificationPrompt` sits in the chat list and calls `Notification.requestPermission()` on click. If permission is denied, the UI doesn't prompt again.
+- **Permission prompt.** `NotificationPrompt` sits in the chat list and asks for permission on click through `useNotificationPermission`, which tracks the browser's permission live, including changes made in site settings. If permission is denied, the UI doesn't prompt again.
 
 </details>
 
@@ -528,6 +529,7 @@ npm run lint && npm run build
 │       ├── chat-settings.ts  chat-api.ts  friends-api.ts  social-api.ts
 │       ├── db.ts                     # Shared MongoClient
 │       └── utils.ts                  # cn()
+├── .github/workflows/ci.yml          # Lint and build on every push and PR
 ├── docs/assets/                      # README images and GIFs
 ├── scripts/seed-leaderboard.mjs
 ├── .env.local.example
@@ -538,7 +540,10 @@ npm run lint && npm run build
 
 ## Testing
 
-CI runs `npm run lint` and `npm run build` (strict typecheck plus the Next.js build). End-to-end coverage is on the roadmap.
+CI (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: `npm ci`, `npm run lint`, then `npm run build` (strict typecheck plus the Next.js build) on Node 22. End-to-end coverage is on the roadmap.
+
+> [!IMPORTANT]
+> Catalog pages are pre-rendered against MongoDB, so the build needs `MONGODB_URI`. In CI it comes from a repository secret named `MONGODB_URI` (Settings, Secrets and variables, Actions), and Atlas Network Access must allow the runner's IPs.
 
 ```bash
 npm run lint
@@ -550,9 +555,13 @@ npm run build
 ### Vercel (app)
 
 1. Push to GitHub.
-2. Import the repo at [vercel.com/new](https://vercel.com/new).
-3. Add `NEXT_PUBLIC_API_URL`, `MONGODB_URI` and, optionally, `NEXT_PUBLIC_TURN_*`.
+2. Import the repo at [vercel.com/new](https://vercel.com/new). Keep **Root Directory** as `./` and set **Framework Preset** to **Next.js**.
+3. Add `NEXT_PUBLIC_API_URL` (the backend's base URL, `https://...`, with no trailing slash or path) and `MONGODB_URI` for Production and Preview, plus `NEXT_PUBLIC_TURN_*` if you need calls across networks. `MONGODB_URI` is needed at build time because catalog pages are pre-rendered.
 4. Deploy.
+5. Add the deployed URL to the backend's CORS and Socket.IO allowed origins, then redeploy the backend.
+
+> [!NOTE]
+> In MongoDB Atlas, allow the builder's network under **Network Access**. Vercel's IPs change, so `0.0.0.0/0` is the usual choice.
 
 ### Backend and MongoDB
 
@@ -576,6 +585,9 @@ The frontend expects a running backend at `NEXT_PUBLIC_API_URL`, which ships its
 | Long messages are rejected | 2000-character limit | Split the message |
 | DMs to a non-friend fail | Backend blocks DMs between non-friends | Befriend first |
 | Tab title keeps `(3) FPS Database` after reading | Title resets on the next `useUnread` tick | Refresh or reopen the room |
+| Build fails with "MONGODB_URI is not set" | Catalog pages are pre-rendered against MongoDB at build time | Set `MONGODB_URI` in Vercel and as a GitHub Actions secret, and allow the builder's IPs in Atlas |
+| Site loads but login or chat fails with CORS errors | The backend doesn't allow the frontend's origin | Add the site URL to the backend's CORS and Socket.IO origins and redeploy it |
+| First request is very slow | Free-tier backends sleep when idle | Wait 30 to 60 seconds for it to wake, or use an always-on plan |
 
 ## Known limitations
 
