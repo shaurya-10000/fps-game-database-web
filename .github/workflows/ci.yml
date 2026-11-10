@@ -37,3 +37,6 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          NEXT_PUBLIC_API_URL: https://fps-game-database.onrender.com
