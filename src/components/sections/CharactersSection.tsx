@@ -1,0 +1,53 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowRight, Users } from "lucide-react";
+import { motion } from "framer-motion";
+import { playHoverSound } from "@/lib/sound";
+import type { Character } from "@/lib/catalog";
+
+export default function CharactersSection({ characters }: { characters: Character[] }) {
+  const showcase = characters.slice(0, 4);
+
+  return (
+    <section className="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-8 lg:px-10 xl:px-16 overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[500px] bg-fuchsia-500/5 blur-[150px] rounded-full pointer-events-none -z-10" />
+      
+      <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end relative z-10">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-500/20 bg-fuchsia-500/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-fuchsia-400 mb-4">
+            <Users size={14} /> Roster
+          </div>
+          <h2 className="font-heading text-4xl font-bold uppercase tracking-wide text-white sm:text-5xl lg:text-6xl">
+            Master the <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-rose-400">Roster</span>
+          </h2>
+        </div>
+        <Link href="/characters" className="group flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold text-black transition-all hover:scale-105">
+          Explore Characters <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+        </Link>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
+        {showcase.map((c, i) => (
+          <motion.div key={c.id} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
+            <Link 
+              href={`/characters`} 
+              onMouseEnter={() => playHoverSound("character")}
+              className="group relative flex h-[500px] flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-zinc-900 transition-all duration-500 hover:-translate-y-2 hover:border-fuchsia-500/50 hover:shadow-2xl hover:shadow-fuchsia-500/20"
+            >
+              <Image src={`/images/characters/${c.id}.jpg`} alt={c.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" onError={(e) => { (e.target as HTMLImageElement).src = "/images/fallback-character.jpg"; }} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
+              <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col justify-end transition-transform duration-500 group-hover:-translate-y-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-fuchsia-400 mb-2 drop-shadow-md">{c.role}</span>
+                <h3 className="text-3xl font-black text-white drop-shadow-xl">{c.name}</h3>
+              </div>
+            </Link>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
