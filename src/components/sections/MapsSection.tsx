@@ -40,7 +40,7 @@ export default function MapsSection({ maps }: { maps: MapDefinition[] }) {
   };
 
   return (
-    <section className="relative w-full overflow-hidden border-t border-border/50 py-32 bg-[#050505]">
+    <section className="relative w-full overflow-hidden border-t border-border/50 py-32 bg-background">
       
       {/* Holographic Radar Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -55,14 +55,14 @@ export default function MapsSection({ maps }: { maps: MapDefinition[] }) {
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-emerald-400 mb-4">
             <MapIcon size={14} /> Tactical Arenas
           </div>
-          <h2 className="font-heading text-4xl font-bold uppercase tracking-wide text-white sm:text-5xl lg:text-6xl">
+          <h2 className="font-heading text-4xl font-bold uppercase tracking-wide text-foreground sm:text-5xl lg:text-6xl">
             Select Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">Battleground</span>
           </h2>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-400">
+          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
             Study the layout, know the cover, and control the map.
           </p>
         </div>
-        <Link href="/maps" className="group flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold text-black transition-all hover:scale-105">
+        <Link href="/maps" className="group flex shrink-0 items-center gap-2 rounded-full bg-foreground px-6 py-3 text-[13px] font-bold text-background transition-all hover:scale-105">
           View All Maps <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
@@ -120,8 +120,8 @@ export default function MapsSection({ maps }: { maps: MapDefinition[] }) {
                 opacity,
               }}
               transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              className={`absolute group cursor-grab active:cursor-grabbing overflow-hidden rounded-[2rem] border bg-zinc-950 transition-colors duration-500 
-                ${isActive ? "border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.2)]" : "border-white/10"}`}
+              className={`absolute group cursor-grab active:cursor-grabbing overflow-hidden rounded-[2rem] border bg-background transition-colors duration-500 
+                ${isActive ? "border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.2)]" : "border-border"}`}
               style={{ 
                 width: isMobile ? "300px" : "600px", 
                 height: isMobile ? "380px" : "400px",
@@ -144,18 +144,18 @@ export default function MapsSection({ maps }: { maps: MapDefinition[] }) {
               )}
 
               <div className="absolute top-4 left-4 md:top-6 md:left-6 flex gap-2 pointer-events-none">
-                <span className="flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 md:px-4 md:py-1.5 text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
+                <span className="flex items-center gap-1.5 rounded-full bg-foreground/5 dark:bg-foreground/5 dark:bg-black/60 backdrop-blur-md px-3 py-1 md:px-4 md:py-1.5 text-[10px] font-bold uppercase tracking-wider text-foreground border border-border">
                   <MapPin size={12} /> {m.size}
                 </span>
               </div>
 
               <div className={`absolute bottom-0 w-full p-6 md:p-8 transition-transform duration-500 pointer-events-none ${isActive ? "translate-y-0" : "translate-y-4"}`}>
-                <h3 className="font-heading text-3xl md:text-5xl font-black uppercase tracking-wide text-white drop-shadow-lg">
+                <h3 className="font-heading text-3xl md:text-5xl font-black uppercase tracking-wide text-foreground drop-shadow-lg">
                   {m.name}
                 </h3>
                 <div className={`mt-3 md:mt-4 flex flex-wrap gap-2 transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}>
                   {m.gameModes.map((g) => (
-                    <span key={g} className="rounded-md bg-white/10 backdrop-blur-md px-2 py-1 md:px-3 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white border border-white/5">
+                    <span key={g} className="rounded-md bg-white/10 backdrop-blur-md px-2 py-1 md:px-3 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-foreground border border-border/50">
                       {g.replace("_", " ")}
                     </span>
                   ))}
@@ -180,3 +180,5 @@ export default function MapsSection({ maps }: { maps: MapDefinition[] }) {
     </section>
   );
 }
+
+

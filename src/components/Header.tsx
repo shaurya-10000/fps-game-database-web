@@ -20,54 +20,39 @@ type NavigationLabel = (typeof NAVIGATION)[number]["label"];
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-const WORDMARK_SWEEP =
-  "linear-gradient(90deg, #0891b2 0%, #c026d3 50%, #ca8a04 100%)";
+
 
 function DiamondMark({ twinkle }: { twinkle: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className="relative flex size-7 items-center justify-center"
+      className="relative flex size-7 shrink-0 items-center justify-center"
     >
-      <motion.span
-        className="absolute inset-0 rounded-md blur-md"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(var(--accent-glow),0.65) 0%, rgba(var(--accent-glow),0) 70%)",
-        }}
+      <motion.svg
+        aria-hidden="true"
+        viewBox="0 0 32 32"
+        className="size-[24px] drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+        fill="none"
         variants={{
-          rest: { opacity: 0.55, scale: 1 },
-          hover: { opacity: 1, scale: 1.5 },
+          rest: { y: 0, scale: 1 },
+          hover: { y: -2, scale: 1.1 },
         }}
-        transition={{ duration: 0.5, ease: EASE }}
-      />
-      <motion.span
-        className="relative flex items-center justify-center"
-        animate={
-          twinkle ? { opacity: [1, 0.72, 1], scale: [1, 0.94, 1] } : undefined
-        }
-        transition={
-          twinkle
-            ? { duration: 3.2, repeat: Infinity, ease: "easeInOut" }
-            : undefined
-        }
+        transition={{ duration: 0.3, ease: EASE }}
       >
-        <motion.svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          className="size-[18px] text-accent"
-          style={{
-            filter: "drop-shadow(0 0 5px rgba(var(--accent-glow),0.85))",
-          }}
-          variants={{
-            rest: { rotate: 0, scale: 1 },
-            hover: { rotate: 45, scale: 1.15 },
-          }}
-          transition={{ duration: 0.6, ease: EASE }}
-        >
-          <path fill="currentColor" d="M12 2L22 12L12 22L2 12Z" />
-        </motion.svg>
-      </motion.span>
+        <defs>
+          <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#fde047" /> {/* yellow-300 */}
+            <stop offset="50%" stopColor="#f59e0b" /> {/* amber-500 */}
+            <stop offset="100%" stopColor="#b45309" /> {/* amber-700 */}
+          </linearGradient>
+        </defs>
+        
+        {/* Crown shape with gradient */}
+        <path d="M4 10 L12 15 L16 4 L20 15 L28 10 L24 26 L8 26 Z" fill="url(#gold)" />
+        
+        {/* Inner highlight for a metallic 3D feel */}
+        <path d="M4 10 L12 15 L16 4 L20 15 L28 10 L24 26 L8 26 Z" fill="none" stroke="#fef3c7" strokeWidth="0.5" className="opacity-40" />
+      </motion.svg>
     </span>
   );
 }
@@ -93,20 +78,8 @@ function Brand() {
         >
           <DiamondMark twinkle={!reduceMotion} />
           
-          <span className="relative font-heading text-[15px] font-bold uppercase tracking-wider sm:text-[16px]">
-            <span className="text-foreground transition-opacity duration-500 group-hover:opacity-0 group-focus-visible:opacity-0">
-              FPS Database
-            </span>
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 bg-clip-text text-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100"
-              style={{
-                backgroundImage: WORDMARK_SWEEP,
-                WebkitBackgroundClip: "text",
-              }}
-            >
-              FPS Database
-            </span>
+          <span className="font-heading text-[15px] font-bold uppercase tracking-wider sm:text-[16px] transition-colors duration-300 group-hover:text-muted">
+            FPS Database
           </span>
         </motion.span>
       </Link>
@@ -395,3 +368,12 @@ export default function Header() {
     </header>
   );
 }
+
+
+
+
+
+
+
+
+

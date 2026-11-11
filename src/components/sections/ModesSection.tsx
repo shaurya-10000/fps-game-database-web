@@ -21,21 +21,21 @@ export default function ModesSection({ modes }: { modes: GameMode[] }) {
     <section className="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-8 lg:px-10 xl:px-16 overflow-hidden">
       
       {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none -z-10" />
+      
 
       <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end relative z-10">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-500 mb-4">
             <Swords size={14} /> Play
           </div>
-          <h2 className="font-heading text-4xl font-bold uppercase tracking-wide text-white sm:text-5xl lg:text-6xl">
+          <h2 className="font-heading text-4xl font-bold uppercase tracking-wide text-foreground sm:text-5xl lg:text-6xl">
             Game <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Modes</span>
           </h2>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-400">
+          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
             Team sizes, rounds per match, and which buckets each mode runs in. The rules that define every queue.
           </p>
         </div>
-        <Link href="/modes" className="group flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold text-black transition-all hover:scale-105">
+        <Link href="/modes" className="group flex shrink-0 items-center gap-2 rounded-full bg-foreground px-6 py-3 text-[13px] font-bold text-background transition-all hover:scale-105">
           View All Modes <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
@@ -50,7 +50,7 @@ export default function ModesSection({ modes }: { modes: GameMode[] }) {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: i * 0.1 }}
           >
-            <Link href={`/modes`} className="group relative flex aspect-[16/9] flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-zinc-950 shadow-2xl transition-all duration-500 hover:border-amber-500/40 hover:shadow-amber-500/10"
+            <Link href={`/modes`} className="group relative flex aspect-[16/9] flex-col overflow-hidden rounded-[2.5rem] border border-border bg-background shadow-2xl transition-all duration-500 hover:border-amber-500/40 hover:shadow-amber-500/10"
               onMouseEnter={() => playHoverSound("mode")}>
               <Image
                 src={`/images/modes/${m.id}.jpg`}
@@ -62,18 +62,18 @@ export default function ModesSection({ modes }: { modes: GameMode[] }) {
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               
               <div className="absolute top-6 left-6">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-black/60 backdrop-blur-md text-white border border-white/10">
+                <span className="flex size-10 items-center justify-center rounded-xl bg-foreground/5 dark:bg-foreground/5 dark:bg-black/60 backdrop-blur-md text-foreground border border-border">
                   {MODE_ICONS[m.id] || <Swords size={20} />}
                 </span>
               </div>
 
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 transition-transform duration-500 group-hover:scale-105">
-                <h3 className="text-4xl font-black text-white drop-shadow-lg">{m.name}</h3>
-                <div className="mt-4 flex gap-4 text-white/90 text-[12px] font-bold uppercase tracking-wider">
-                  <span className="rounded-lg bg-white/10 backdrop-blur-md px-3 py-1.5 border border-white/10">
+                <h3 className="text-4xl font-black text-foreground drop-shadow-lg">{m.name}</h3>
+                <div className="mt-4 flex gap-4 text-foreground/90 text-[12px] font-bold uppercase tracking-wider">
+                  <span className="rounded-lg bg-white/10 backdrop-blur-md px-3 py-1.5 border border-border">
                     {m.teamSize === 1 ? "Solo" : `${m.teamSize}v${m.teamSize}`}
                   </span>
-                  <span className="rounded-lg bg-white/10 backdrop-blur-md px-3 py-1.5 border border-white/10">
+                  <span className="rounded-lg bg-white/10 backdrop-blur-md px-3 py-1.5 border border-border">
                     {m.roundsPerMatch} Rounds
                   </span>
                 </div>
@@ -85,6 +85,8 @@ export default function ModesSection({ modes }: { modes: GameMode[] }) {
     </section>
   );
 }
+
+
 
 
 

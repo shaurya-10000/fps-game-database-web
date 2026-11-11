@@ -1,0 +1,121 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, LayoutDashboard } from "lucide-react";
+import { getToken, isTokenValid } from "@/lib/auth";
+
+type Stats = {
+  weapons: number;
+  characters: number;
+  maps: number;
+  modes: number;
+  throwables: number;
+  equipment: number;
+};
+
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+export default function Hero({ stats }: { stats: Stats }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    const check = () => setIsLoggedIn(isTokenValid(getToken()));
+    check();
+    window.addEventListener("fps-auth-changed", check);
+    return () => window.removeEventListener("fps-auth-changed", check);
+  }, []);
+
+  return (
+    <section className="relative isolate flex min-h-[85vh] items-center overflow-hidden bg-black">
+      
+      {/* 1. Deep Background Image with heavy gradient masking */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2940&auto=format&fit=crop" 
+          alt="Tactical background" 
+          className="h-full w-full object-cover opacity-30 grayscale"
+        />
+        {/* Left-to-right gradient to make text readable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+        {/* Bottom gradient to blend into the page */}
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background to-transparent" />
+      </div>
+
+      <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-12 xl:px-20 grid lg:grid-cols-[1fr_400px] gap-12 lg:gap-24 items-center">
+        
+        {/* 2. Massive Editorial Typography */}
+        <div className="max-w-3xl">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-12 bg-amber-500" />
+            <span className="font-mono text-[12px] font-bold uppercase tracking-widest text-amber-500">
+              System Online
+            </span>
+          </div>
+          
+          <h1 className="font-heading text-[clamp(4rem,8vw,7.5rem)] font-bold uppercase leading-[0.85] tracking-tighter text-white drop-shadow-2xl">
+            Master the <br />
+            <span className="text-zinc-500">arena.</span>
+          </h1>
+          
+          <p className="mt-8 max-w-xl text-[18px] leading-relaxed text-zinc-400">
+            The definitive database for competitive shooters. Deep ballistics, map strategies, and live Elo tracking. Built for the players who take the game seriously.
+          </p>
+          
+          <div className="mt-12 flex flex-wrap items-center gap-6">
+            {!mounted ? (
+              <div className="h-14 w-48 animate-pulse bg-white/10" />
+            ) : isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="group flex h-14 items-center gap-3 bg-white px-8 text-[14px] font-bold uppercase tracking-wide text-black transition-transform hover:scale-105"
+              >
+                <LayoutDashboard className="size-5" />
+                Enter Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard/login"
+                className="group flex h-14 items-center gap-3 bg-white px-8 text-[14px] font-bold uppercase tracking-wide text-black transition-transform hover:scale-105"
+              >
+                Initialize Account
+                <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            )}
+            
+            <Link
+              href="/weapons"
+              className="flex h-14 items-center text-[14px] font-bold uppercase tracking-wide text-white transition-colors hover:text-amber-500"
+            >
+              Access Database
+            </Link>
+          </div>
+        </div>
+
+        {/* 3. Asymmetrical HUD Data Panel (Floating, sharp edges) */}
+        <div className="hidden lg:flex flex-col gap-4 border-l border-white/10 pl-8">
+          
+          <div className="bg-black/60 backdrop-blur-md border border-white/10 p-5 hover:border-amber-500/50 transition-colors">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Total Weapons</div>
+            <div className="font-mono text-4xl font-bold text-white">{stats.weapons}</div>
+          </div>
+          
+          <div className="bg-black/60 backdrop-blur-md border border-white/10 p-5 hover:border-amber-500/50 transition-colors">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Tactical Maps</div>
+            <div className="font-mono text-4xl font-bold text-white">{stats.maps}</div>
+          </div>
+          
+          <div className="bg-black/60 backdrop-blur-md border border-white/10 p-5 hover:border-amber-500/50 transition-colors">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Game Modes</div>
+            <div className="font-mono text-4xl font-bold text-white">{stats.modes}</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}

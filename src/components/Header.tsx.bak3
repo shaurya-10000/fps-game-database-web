@@ -1,0 +1,365 @@
+"use client";
+
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Menu as MenuIcon, X as CloseIcon, Home, ArrowLeft } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import SettingsMenu from "./SettingsMenu";
+
+const NAVIGATION = [
+  { label: "Characters", href: "/characters" },
+  { label: "Modes", href: "/modes" },
+  { label: "Weapons", href: "/weapons" },
+  { label: "Maps", href: "/maps" },
+  { label: "Throwables", href: "/throwables" },
+  { label: "Equipment", href: "/equipment" },
+] as const;
+
+type NavigationLabel = (typeof NAVIGATION)[number]["label"];
+
+const EASE = [0.16, 1, 0.3, 1] as const;
+
+
+
+function DiamondMark({ twinkle }: { twinkle: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="relative flex size-7 items-center justify-center"
+    >
+      <motion.svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="size-[22px] text-foreground"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        variants={{
+          rest: { rotate: 0, scale: 1 },
+          hover: { rotate: 90, scale: 1.1 },
+        }}
+        transition={{ duration: 0.4, ease: EASE }}
+      >
+        <path d="M12 2L22 12L12 22L2 12Z" />
+        <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" />
+      </motion.svg>
+    </span>
+  );
+}
+
+function Brand() {
+  const reduceMotion = useReducedMotion();
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.8, delay: 0.05, ease: EASE }}
+    >
+      <Link
+        href="/"
+        aria-label="FPS Game Database home"
+        className="group inline-flex select-none items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+      >
+        <motion.span
+          className="inline-flex items-center gap-2.5"
+          initial="rest"
+          animate="rest"
+          whileHover="hover"
+        >
+          <DiamondMark twinkle={!reduceMotion} />
+          
+          <span className="font-heading text-[15px] font-bold uppercase tracking-wider sm:text-[16px] transition-colors duration-300 group-hover:text-muted">
+            FPS Database
+          </span>
+        </motion.span>
+      </Link>
+    </motion.div>
+  );
+}
+
+interface NavigationItemProps {
+  label: NavigationLabel;
+  href: string;
+  active: boolean;
+  delay: number;
+  onClick?: () => void;
+}
+
+function NavigationItem({
+  label,
+  href,
+  active,
+  delay,
+  onClick,
+}: NavigationItemProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.65, delay, ease: EASE }}
+    >
+      <Link
+        href={href}
+        onClick={onClick}
+        aria-current={active ? "page" : undefined}
+        className={`
+          group relative inline-flex items-center py-2
+          font-heading text-[15px] font-bold uppercase tracking-wider transition-colors duration-300 sm:text-[16px]
+          ${active ? "text-foreground" : "text-muted hover:text-foreground"}
+          focus-visible:outline-none focus-visible:ring-2
+          focus-visible:ring-accent/30 focus-visible:ring-offset-4
+          focus-visible:ring-offset-background
+        `}
+      >
+        <span>{label}</span>
+        <span
+          aria-hidden="true"
+          className="absolute -bottom-0.5 left-0 h-px w-full origin-left scale-x-0 bg-foreground/40 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100"
+        />
+        <AnimatePresence>
+          {active && (
+            <motion.span
+              aria-hidden="true"
+              layoutId="fps-nav-indicator"
+              className="absolute -bottom-1.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-accent"
+              style={{ boxShadow: "0 0 8px 1px rgba(var(--accent-glow),0.8)" }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 0.25, ease: EASE }}
+            />
+          )}
+        </AnimatePresence>
+      </Link>
+    </motion.div>
+  );
+}
+
+function DesktopNav({ pathname }: { pathname: string }) {
+  return (
+    <nav
+      aria-label="Primary navigation"
+      className="hidden items-center gap-7 md:flex lg:gap-9"
+    >
+      {pathname !== "/" && (
+        <motion.div
+           initial={{ opacity: 0, x: -10 }}
+           animate={{ opacity: 1, x: 0 }}
+           className="mr-2"
+        >
+          <Link
+            href="/"
+            className="group flex items-center gap-1.5 rounded-full border border-border bg-surface/50 px-3 py-1.5 text-[12px] font-medium text-muted transition-all hover:border-foreground/20 hover:bg-surface hover:text-foreground"
+          >
+            <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
+            Home
+          </Link>
+        </motion.div>
+      )}
+
+      {NAVIGATION.map((item, index) => {
+        const active =
+          pathname === item.href || pathname.startsWith(item.href + "/");
+        return (
+          <NavigationItem
+            key={item.href}
+            label={item.label}
+            href={item.href}
+            active={active}
+            delay={0.12 + index * 0.06}
+          />
+        );
+      })}
+    </nav>
+  );
+}
+
+function PillLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`font-heading rounded-md px-3 py-1.5 text-[15px] font-bold uppercase tracking-wider transition-colors
+        ${
+          active
+            ? "bg-foreground/[0.06] text-foreground"
+            : "text-muted hover:text-foreground"
+        }
+      `}
+    >
+      {children}
+    </Link>
+  );
+}
+
+export default function Header() {
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const update = (): void => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  // Navigating closes the mobile menu.
+  const [menuPathname, setMenuPathname] = useState(pathname);
+  if (menuPathname !== pathname) {
+    setMenuPathname(pathname);
+    setMobileOpen(false);
+  }
+
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  const rankingsActive = pathname === "/rankings";
+  const dashboardActive =
+    pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+
+  return (
+    <header
+      className={`
+        sticky top-0 z-50 box-border h-[76px] w-full shrink-0 border-b
+        backdrop-blur-xl transition-[background-color,border-color] duration-500
+        ${scrolled ? "border-border bg-background" : "border-border/60 bg-background"}
+      `}
+    >
+      <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:px-10 xl:px-16">
+        
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Brand />
+          {pathname !== "/" && (
+            <Link
+              href="/"
+              className="flex md:hidden items-center gap-1 rounded-md border border-border bg-surface/50 px-2.5 py-1.5 text-[11px] font-semibold text-muted hover:bg-surface hover:text-foreground transition-colors"
+            >
+              <ArrowLeft size={12} />
+              Home
+            </Link>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <DesktopNav pathname={pathname} />
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35, ease: EASE }}
+            className="hidden items-center gap-1 md:flex"
+          >
+            <PillLink href="/rankings" active={rankingsActive}>
+              Rankings
+            </PillLink>
+            <PillLink href="/dashboard" active={dashboardActive}>
+              Dashboard
+            </PillLink>
+          </motion.div>
+          <SettingsMenu />
+          <button
+            type="button"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((v) => !v)}
+            className="rounded-md border border-border p-1.5 text-muted transition-colors hover:text-foreground md:hidden"
+          >
+            {mobileOpen ? (
+              <CloseIcon size={16} strokeWidth={1.8} />
+            ) : (
+              <MenuIcon size={16} strokeWidth={1.8} />
+            )}
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.nav
+            aria-label="Mobile navigation"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="overflow-hidden border-t border-border bg-background md:hidden"
+          >
+            <ul className="mx-auto max-w-[1600px] px-5 py-3 sm:px-8">
+              
+              {pathname !== "/" && (
+                <li className="mb-2 pb-2 border-b border-border">
+                  <Link
+                    href="/"
+                    onClick={closeMobile}
+                    className="flex items-center gap-2 rounded-md px-2 py-2 text-[14px] font-medium text-accent hover:bg-foreground/[0.06]"
+                  >
+                    <Home size={16} />
+                    Back to Home
+                  </Link>
+                </li>
+              )}
+
+              {NAVIGATION.map((item) => {
+                const active =
+                  pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={closeMobile}
+                      className={`block rounded-md px-2 py-2 font-heading text-[16px] font-bold uppercase tracking-wide transition-colors ${
+                        active
+                          ? "bg-foreground/[0.06] text-foreground"
+                          : "text-muted hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+              <li className="mt-1 border-t border-border pt-2">
+                <Link
+                  href="/rankings"
+                  onClick={closeMobile}
+                  className={`block rounded-md px-2 py-2 font-heading text-[16px] font-bold uppercase tracking-wide transition-colors ${
+                    rankingsActive
+                      ? "bg-foreground/[0.06] text-foreground"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Rankings
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dashboard"
+                  onClick={closeMobile}
+                  className={`block rounded-md px-2 py-2 font-heading text-[16px] font-bold uppercase tracking-wide transition-colors ${
+                    dashboardActive
+                      ? "bg-foreground/[0.06] text-foreground"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Dashboard
+                </Link>
+              </li>
+            </ul>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
+
+

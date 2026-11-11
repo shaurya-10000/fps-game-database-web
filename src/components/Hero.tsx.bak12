@@ -1,0 +1,238 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, useSyncExternalStore, useRef } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { ArrowRight, LayoutDashboard, Trophy, Shield } from "lucide-react";
+import { getToken, isTokenValid } from "@/lib/auth";
+
+type Stats = {
+  weapons: number;
+  characters: number;
+  maps: number;
+  modes: number;
+  throwables: number;
+  equipment: number;
+};
+
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+export default function Hero({ stats }: { stats: Stats }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Cursor tracking for parallax
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
+  // Smooth out the motion
+  const springX = useSpring(mouseX, { stiffness: 100, damping: 30 });
+  const springY = useSpring(mouseY, { stiffness: 100, damping: 30 });
+
+  // Map mouse position to rotations (subtle 3D tilt)
+  const rotateX = useTransform(springY, [-0.5, 0.5], [4, -4]);
+  const rotateY = useTransform(springX, [-0.5, 0.5], [-4, 4]);
+
+  // Map mouse position to background gradient movement
+  const bgX = useTransform(springX, [-0.5, 0.5], ["40%", "60%"]);
+  const bgY = useTransform(springY, [-0.5, 0.5], ["40%", "60%"]);
+
+  useEffect(() => {
+    const check = () => setIsLoggedIn(isTokenValid(getToken()));
+    check();
+    window.addEventListener("fps-auth-changed", check);
+    return () => window.removeEventListener("fps-auth-changed", check);
+  }, []);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const onMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  const rise = (delay: number) => ({
+    initial: { opacity: 0, y: 16 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] as const },
+  });
+
+  return (
+    <section 
+      ref={containerRef}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      className="relative isolate flex min-h-[85vh] items-center overflow-hidden border-b border-border bg-background"
+    >
+      {/* Dynamic background reacting to cursor */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-40 mix-blend-screen"
+        style={{
+          background: useTransform(
+            [bgX, bgY],
+            ([x, y]) => `radial-gradient(circle at ${x} ${y}, var(--accent-glow) 0%, transparent 40%)`
+          ),
+          opacity: 0.15,
+        }}
+      />
+
+      {/* Static subtle grid */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundSize: "32px 32px",
+          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent)",
+        }}
+      />
+
+      <div className="relative mx-auto grid w-full max-w-[1400px] gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-10 lg:py-32 xl:px-16">
+        
+        {/* Left Column: Typography & CTA */}
+        <div className="flex flex-col items-start text-left z-10">
+          <motion.div {...rise(0)} className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/50 px-3 py-1 text-[11px] font-semibold text-muted backdrop-blur-sm">
+            <span className="size-1.5 rounded-full bg-emerald-500" />
+            The competitive FPS reference
+          </motion.div>
+
+          <motion.h1
+            {...rise(0.08)}
+            className="mt-8 font-heading text-[clamp(2.5rem,6vw,5.5rem)] font-bold uppercase leading-[0.95] tracking-[-0.02em] text-foreground"
+          >
+            Know the meta
+            <span className="block text-muted">before the lobby.</span>
+          </motion.h1>
+
+          <motion.p
+            {...rise(0.16)}
+            className="mt-6 max-w-[48ch] text-[15.5px] leading-relaxed text-muted"
+          >
+            Ballistics, maps, modes and operators — documented. Live Elo, tier
+            progression and realtime squad chat. Everything a competitive
+            player needs, without the noise.
+          </motion.p>
+
+          <motion.div {...rise(0.24)} className="mt-10 flex flex-wrap items-center gap-4">
+            {!mounted ? (
+              <div className="h-12 w-48 animate-pulse rounded-full bg-foreground/10" />
+            ) : isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[13.5px] font-semibold text-background transition-transform hover:scale-[1.02]"
+              >
+                <LayoutDashboard className="size-4" />
+                Open dashboard
+                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard/login"
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[13.5px] font-semibold text-background transition-transform hover:scale-[1.02]"
+              >
+                Create free account
+                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            )}
+            {/* empty div to push the stats down if needed, or just remove the inline ones */}
+          </motion.div>
+
+          {/* Clean, structured stats row */}
+          <motion.div {...rise(0.32)} className="mt-16 grid w-full grid-cols-2 gap-6 border-t border-border pt-8 sm:grid-cols-4">
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">Weapons</dt>
+              <dd className="mt-1 font-mono text-2xl font-semibold text-foreground">{stats.weapons}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">Operators</dt>
+              <dd className="mt-1 font-mono text-2xl font-semibold text-foreground">{stats.characters}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">Maps</dt>
+              <dd className="mt-1 font-mono text-2xl font-semibold text-foreground">{stats.maps}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">Modes</dt>
+              <dd className="mt-1 font-mono text-2xl font-semibold text-foreground">{stats.modes}</dd>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Column: Floating Leaderboard Card with 3D Tilt */}
+        <motion.div
+          {...rise(0.32)}
+          style={{ perspective: 1000 }}
+          className="relative mx-auto w-full max-w-md lg:ml-auto z-10"
+        >
+          {/* Decorative glow behind card */}
+          <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-tr from-accent/20 to-transparent opacity-30 blur-2xl" />
+          
+          <motion.div 
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+            className="relative overflow-hidden rounded-3xl border border-border bg-surface/80 shadow-2xl backdrop-blur-xl"
+          >
+            <div className="flex items-center justify-between border-b border-border bg-background/50 px-6 py-4">
+              <div className="flex items-center gap-2 text-[13px] font-semibold text-foreground">
+                <Trophy size={16} className="text-amber-500" />
+                Top Players
+              </div>
+              <span className="rounded-full bg-foreground/5 px-2.5 py-0.5 text-[11px] font-medium text-muted">
+                Global
+              </span>
+            </div>
+
+            <div className="divide-y divide-border/50 p-2">
+              {[
+                { rank: 1, name: "Viper", score: 3140, tier: "Master" },
+                { rank: 2, name: "Talon", score: 2895, tier: "Master" },
+                { rank: 3, name: "Kestrel", score: 2410, tier: "Diamond" },
+                { rank: 4, name: "Echo", score: 2150, tier: "Diamond" },
+              ].map((player) => (
+                <div key={player.rank} className="flex items-center gap-4 rounded-xl px-4 py-3 transition-colors hover:bg-foreground/5">
+                  <span className={`w-4 font-mono text-[13px] font-bold ${player.rank === 1 ? "text-amber-500" : "text-muted"}`}>
+                    {player.rank}
+                  </span>
+                  <div className="flex size-8 items-center justify-center rounded-full bg-background border border-border text-[11px] font-bold text-foreground">
+                    {player.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-semibold text-foreground">{player.name}</p>
+                    <p className="text-[11px] text-muted flex items-center gap-1">
+                      <Shield size={10} /> {player.tier}
+                    </p>
+                  </div>
+                  <span className="font-mono text-[13px] font-semibold text-foreground">
+                    {player.score}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="border-t border-border p-3">
+              <Link 
+                href="/rankings"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-foreground/5 py-2.5 text-[12px] font-semibold text-foreground transition-colors hover:bg-foreground/10"
+              >
+                View full leaderboard <ArrowRight size={14} />
+              </Link>
+            </div>
+          </motion.div>
+        </motion.div>
+
+      </div>
+    </section>
+  );
+}
+

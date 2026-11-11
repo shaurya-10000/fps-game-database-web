@@ -1,0 +1,247 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, useRef, useSyncExternalStore } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, LayoutDashboard, Target, Crosshair } from "lucide-react";
+import { getToken, isTokenValid } from "@/lib/auth";
+
+type Stats = {
+  weapons: number;
+  characters: number;
+  maps: number;
+  modes: number;
+  throwables: number;
+  equipment: number;
+};
+
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+export default function Hero({ stats }: { stats: Stats }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+
+  // Mini-game State
+  const [gameState, setGameState] = useState<"idle" | "playing" | "over">("idle");
+  const [targetPos, setTargetPos] = useState({ x: 50, y: 50 });
+  const [score, setScore] = useState(0);
+  const [reactionTime, setReactionTime] = useState(0);
+  const [bestTime, setBestTime] = useState<number | null>(null);
+  const spawnTime = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const check = () => setIsLoggedIn(isTokenValid(getToken()));
+    check();
+    window.addEventListener("fps-auth-changed", check);
+    return () => window.removeEventListener("fps-auth-changed", check);
+  }, []);
+
+  const startGame = () => {
+    setGameState("playing");
+    setScore(0);
+    spawnTarget();
+  };
+
+  const spawnTarget = () => {
+    // Random position between 10% and 90%
+    setTargetPos({
+      x: Math.floor(Math.random() * 80) + 10,
+      y: Math.floor(Math.random() * 80) + 10,
+    });
+    spawnTime.current = Date.now();
+    
+    // Miss timeout
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setGameState("over");
+    }, 2000);
+  };
+
+  const handleHit = (e: React.MouseEvent) => {
+    e.stopPropagation(); // prevent missing
+    if (gameState !== "playing") return;
+    
+    const time = Date.now() - spawnTime.current;
+    setReactionTime(time);
+    
+    if (bestTime === null || time < bestTime) {
+      setBestTime(time);
+    }
+
+    setScore((s) => s + 1);
+    
+    if (score >= 4) {
+      setGameState("over");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    } else {
+      spawnTarget();
+    }
+  };
+
+  const handleMiss = () => {
+    if (gameState === "playing") {
+      setGameState("over");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    }
+  };
+
+  return (
+    <section className="relative isolate flex min-h-[85vh] items-center overflow-hidden bg-background">
+      
+      {/* Background grid & glow */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-[20%] left-[10%] h-[800px] w-[800px] rounded-full bg-amber-500/5 blur-[150px]" />
+        <div 
+          className="absolute inset-0 opacity-[0.03]" 
+          style={{
+            backgroundImage: "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "96px 96px",
+            maskImage: "linear-gradient(to bottom, black 20%, transparent 80%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 20%, transparent 80%)"
+          }} 
+        />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-[1400px] px-5 py-24 sm:px-8 lg:px-12 xl:px-16 grid lg:grid-cols-[1fr_450px] gap-16 lg:gap-8 items-center">
+        
+        {/* Left Column: Editorial Typography */}
+        <div className="flex flex-col z-10 relative">
+          <div className="flex items-center gap-3 mb-8">
+            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-muted">
+              The competitive FPS index
+            </span>
+          </div>
+
+          <h1 className="font-heading text-[clamp(3.5rem,7vw,7.5rem)] font-bold uppercase leading-[0.85] tracking-[-0.02em] text-foreground">
+            Master the
+            <span className="block text-muted/60">meta.</span>
+          </h1>
+
+          <p className="mt-8 max-w-md text-[16px] leading-relaxed text-muted">
+            Ballistics, maps, modes and operators — meticulously documented. Live Elo, tier progression and realtime squad chat. Built for those who play to win.
+          </p>
+
+          <div className="mt-12 flex flex-wrap items-center gap-5">
+            {!mounted ? (
+              <div className="h-12 w-48 animate-pulse rounded-full bg-foreground/10" />
+            ) : isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]"
+              >
+                <LayoutDashboard className="size-4" />
+                Open dashboard
+                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard/login"
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]"
+              >
+                Create free account
+                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            )}
+            
+            <Link
+              href="/weapons"
+              className="group flex items-center gap-2 text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+            >
+              Browse database
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Right Column: Interactive Aim Trainer */}
+        <div className="relative z-10 w-full max-w-[450px] mx-auto lg:ml-auto">
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/50 shadow-2xl backdrop-blur-xl">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border bg-background/80 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Target size={16} className="text-amber-500" />
+                <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-foreground">Aim Trainer</span>
+              </div>
+              <div className="flex items-center gap-4 font-mono text-[11px] text-muted">
+                <span className="flex items-center gap-1.5"><Crosshair size={12} /> {score} / 5</span>
+                <span>Best: {bestTime ? `${bestTime}ms` : "--"}</span>
+              </div>
+            </div>
+
+            {/* Game Area */}
+            <div 
+              onClick={handleMiss}
+              className={`relative h-[400px] w-full overflow-hidden cursor-crosshair transition-colors ${gameState === "playing" ? "bg-foreground/[0.02]" : "bg-background/50"}`}
+            >
+              <AnimatePresence>
+                {gameState === "idle" && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
+                  >
+                    <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
+                      <Crosshair size={28} />
+                    </div>
+                    <h3 className="text-[16px] font-bold text-foreground">Test your reaction time</h3>
+                    <p className="mt-2 text-[13px] text-muted">Hit 5 targets as fast as you can. Clicking empty space will end the run.</p>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); startGame(); }}
+                      className="mt-6 rounded-full bg-foreground px-6 py-2.5 text-[12px] font-bold text-background transition-transform hover:scale-105"
+                    >
+                      Start Drill
+                    </button>
+                  </motion.div>
+                )}
+
+                {gameState === "playing" && (
+                  <motion.div
+                    key="target"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    className="absolute flex size-12 -translate-x-1/2 -translate-y-1/2 cursor-crosshair items-center justify-center rounded-full border-2 border-rose-500 bg-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.4)]"
+                    style={{ left: `${targetPos.x}%`, top: `${targetPos.y}%` }}
+                    onClick={handleHit}
+                  >
+                    <div className="size-4 rounded-full bg-rose-500" />
+                  </motion.div>
+                )}
+
+                {gameState === "over" && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-background/80 backdrop-blur-sm"
+                  >
+                    <h3 className="text-2xl font-black uppercase text-foreground">Drill Complete</h3>
+                    <div className="mt-6 flex gap-8">
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono text-3xl font-bold text-amber-500">{score}</span>
+                        <span className="text-[11px] font-bold uppercase text-muted">Hits</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono text-3xl font-bold text-foreground">{reactionTime}</span>
+                        <span className="text-[11px] font-bold uppercase text-muted">Last ms</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); startGame(); }}
+                      className="mt-8 rounded-full border border-border bg-surface px-6 py-2.5 text-[12px] font-bold text-foreground transition-colors hover:bg-foreground/5"
+                    >
+                      Try Again
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

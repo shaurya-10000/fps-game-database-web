@@ -1,0 +1,170 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, LayoutDashboard, Trophy, Crosshair, Map } from "lucide-react";
+import { getToken, isTokenValid } from "@/lib/auth";
+
+type Stats = {
+  weapons: number;
+  characters: number;
+  maps: number;
+  modes: number;
+  throwables: number;
+  equipment: number;
+};
+
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0 },
+};
+
+export default function Hero({ stats }: { stats: Stats }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    const check = () => setIsLoggedIn(isTokenValid(getToken()));
+    check();
+    window.addEventListener("fps-auth-changed", check);
+    return () => window.removeEventListener("fps-auth-changed", check);
+  }, []);
+
+  return (
+    <section className="relative border-b border-border bg-background overflow-hidden">
+      <div className="mx-auto max-w-[1400px] px-5 py-20 sm:px-8 lg:grid lg:grid-cols-2 lg:gap-16 lg:px-10 lg:py-32 xl:px-16 items-center">
+        
+        {/* Left Column: Editorial Typography */}
+        <motion.div 
+          initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+          className="flex flex-col justify-center"
+        >
+          <motion.div variants={fadeUp} className="flex items-center gap-3 mb-6">
+            <span className="flex h-2 w-2 rounded-full bg-amber-500" />
+            <span className="text-[12px] font-bold uppercase tracking-[0.2em] text-muted">
+              FPS Database
+            </span>
+          </motion.div>
+
+          <motion.h1 
+            variants={fadeUp}
+            className="font-heading text-[clamp(3rem,6vw,5.5rem)] font-bold uppercase leading-[0.9] tracking-tight text-foreground"
+          >
+            The definitive <br />
+            <span className="text-muted">reference.</span>
+          </motion.h1>
+
+          <motion.p 
+            variants={fadeUp}
+            className="mt-6 max-w-md text-[16px] leading-relaxed text-muted"
+          >
+            Every ballistics profile, map layout, and competitive rank — documented and searchable. Zero fluff, just the data you need to win.
+          </motion.p>
+
+          <motion.div variants={fadeUp} className="mt-10 flex flex-wrap items-center gap-4">
+            {!mounted ? (
+              <div className="h-12 w-40 animate-pulse rounded-lg bg-foreground/10" />
+            ) : isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="group inline-flex h-12 items-center gap-2 rounded-lg bg-foreground px-6 text-[14px] font-semibold text-background transition-colors hover:bg-foreground/90"
+              >
+                <LayoutDashboard className="size-4" />
+                Open dashboard
+                <ArrowRight className="size-4 opacity-50 transition-transform group-hover:translate-x-1" />
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard/login"
+                className="group inline-flex h-12 items-center gap-2 rounded-lg bg-foreground px-6 text-[14px] font-semibold text-background transition-colors hover:bg-foreground/90"
+              >
+                Create free account
+                <ArrowRight className="size-4 opacity-50 transition-transform group-hover:translate-x-1" />
+              </Link>
+            )}
+            <Link
+              href="/weapons"
+              className="inline-flex h-12 items-center px-6 text-[14px] font-semibold text-muted transition-colors hover:text-foreground"
+            >
+              Browse the catalog
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* Right Column: The "Terminal" Preview */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+          className="mt-16 lg:mt-0 relative"
+        >
+          {/* Subtle offset background block for depth */}
+          <div className="absolute -inset-2 rounded-2xl bg-surface border border-border/50 translate-x-4 translate-y-4" />
+          
+          <div className="relative rounded-2xl border border-border bg-background overflow-hidden shadow-2xl">
+            {/* Terminal Header */}
+            <div className="flex items-center gap-2 border-b border-border bg-surface/50 px-4 py-3">
+              <div className="flex gap-1.5">
+                <div className="size-3 rounded-full bg-foreground/20" />
+                <div className="size-3 rounded-full bg-foreground/20" />
+                <div className="size-3 rounded-full bg-foreground/20" />
+              </div>
+              <span className="ml-2 font-mono text-[11px] font-medium text-muted">fps-db / overview</span>
+            </div>
+
+            {/* Terminal Body */}
+            <div className="p-6 sm:p-8 grid gap-6">
+              
+              {/* Top Leaderboard Snippet */}
+              <div className="rounded-xl border border-border bg-surface/30 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy size={14} className="text-amber-500" />
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-foreground">Top Rated</span>
+                </div>
+                <div className="space-y-2 font-mono text-[13px]">
+                  <div className="flex justify-between items-center text-foreground">
+                    <span>1. Viper</span>
+                    <span className="text-amber-500 font-semibold">3140 RP</span>
+                  </div>
+                  <div className="flex justify-between items-center text-muted">
+                    <span>2. Talon</span>
+                    <span>2895 RP</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border border-border bg-surface/30 p-4">
+                  <div className="flex items-center gap-2 mb-1 text-muted">
+                    <Crosshair size={14} />
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Weapons</span>
+                  </div>
+                  <div className="font-mono text-2xl font-semibold text-foreground">{stats.weapons}</div>
+                </div>
+                <div className="rounded-xl border border-border bg-surface/30 p-4">
+                  <div className="flex items-center gap-2 mb-1 text-muted">
+                    <Map size={14} />
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Maps</span>
+                  </div>
+                  <div className="font-mono text-2xl font-semibold text-foreground">{stats.maps}</div>
+                </div>
+              </div>
+
+              {/* Footer detail */}
+              <div className="pt-2 text-center text-[12px] font-medium text-muted">
+                + {stats.modes} game modes, {stats.throwables} throwables, {stats.equipment} equipment
+              </div>
+
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

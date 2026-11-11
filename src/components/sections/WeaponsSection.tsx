@@ -23,13 +23,13 @@ export default function WeaponsSection({ weapons }: { weapons: Weapon[] }) {
             Arsenal
           </div>
           <h2 className="font-heading text-4xl font-bold uppercase tracking-wide text-foreground sm:text-5xl lg:text-6xl">
-            All <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400">Weapons</span>
+            All <span className="text-foreground">Weapons</span>
           </h2>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
             Browse the full arsenal. Hover to pause and inspect any weapon.
           </p>
         </div>
-        <Link href="/weapons" className="group flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold text-black transition-all hover:scale-105">
+        <Link href="/weapons" className="group flex shrink-0 items-center gap-2 rounded-full bg-foreground px-6 py-3 text-[13px] font-bold text-background transition-all hover:scale-105">
           View Arsenal <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
@@ -54,7 +54,7 @@ export default function WeaponsSection({ weapons }: { weapons: Weapon[] }) {
               href="/weapons"
               onMouseEnter={() => playHoverSound("weapon")}
               // Increased height and width for bigger picture size
-              className="group relative flex h-[450px] w-[340px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 transition-all duration-300 hover:border-accent/50"
+              className="group relative flex h-[450px] w-[340px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl border border-border bg-surface transition-all duration-300 hover:border-accent/50"
             >
               <Image
                 src={`/images/weapons/${w.id}.jpg`}
@@ -67,7 +67,7 @@ export default function WeaponsSection({ weapons }: { weapons: Weapon[] }) {
               
               <div className="relative z-10 p-6 translate-y-2 transition-transform duration-300 group-hover:translate-y-0">
                 <span className="text-[11px] font-bold uppercase tracking-widest text-accent">{w.type.replace("_", " ")}</span>
-                <h3 className="font-heading text-3xl font-bold uppercase tracking-wide text-white leading-tight mt-1">{w.name}</h3>
+                <h3 className="font-heading text-3xl font-bold uppercase tracking-wide text-foreground leading-tight mt-1">{w.name}</h3>
               </div>
             </Link>
           ))}
@@ -76,5 +76,8 @@ export default function WeaponsSection({ weapons }: { weapons: Weapon[] }) {
     </section>
   );
 }
+
+
+
 
 

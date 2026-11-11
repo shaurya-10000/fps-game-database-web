@@ -1,0 +1,302 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, useRef, useSyncExternalStore } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, LayoutDashboard, Target, Crosshair, Zap, Flame } from "lucide-react";
+import { getToken, isTokenValid } from "@/lib/auth";
+
+type Stats = {
+  weapons: number;
+  characters: number;
+  maps: number;
+  modes: number;
+  throwables: number;
+  equipment: number;
+};
+
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+export default function Hero({ stats }: { stats: Stats }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+
+  // Mini-game State
+  const [gameState, setGameState] = useState<"idle" | "playing" | "over">("idle");
+  const [targetPos, setTargetPos] = useState({ x: 50, y: 50 });
+  const [hits, setHits] = useState(0);
+  const [reactionTimes, setReactionTimes] = useState<number[]>([]);
+  const [bestTime, setBestTime] = useState<number | null>(null);
+  const [lastHit, setLastHit] = useState<{ x: number; y: number; id: number } | null>(null);
+  
+  const spawnTime = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const check = () => setIsLoggedIn(isTokenValid(getToken()));
+    check();
+    window.addEventListener("fps-auth-changed", check);
+    return () => window.removeEventListener("fps-auth-changed", check);
+  }, []);
+
+  const startGame = () => {
+    setGameState("playing");
+    setHits(0);
+    setReactionTimes([]);
+    setLastHit(null);
+    spawnTarget();
+  };
+
+  const spawnTarget = () => {
+    setTargetPos({
+      x: Math.floor(Math.random() * 70) + 15,
+      y: Math.floor(Math.random() * 70) + 15,
+    });
+    spawnTime.current = Date.now();
+    
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setGameState("over");
+    }, 1800); // slightly faster timeout for FPS feel
+  };
+
+  const handleHit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (gameState !== "playing") return;
+    
+    const time = Date.now() - spawnTime.current;
+    const newTimes = [...reactionTimes, time];
+    setReactionTimes(newTimes);
+    
+    if (bestTime === null || time < bestTime) setBestTime(time);
+
+    const newHits = hits + 1;
+    setHits(newHits);
+    setLastHit({ x: targetPos.x, y: targetPos.y, id: Date.now() });
+    
+    if (newHits >= 5) {
+      setGameState("over");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    } else {
+      spawnTarget();
+    }
+  };
+
+  const handleMiss = () => {
+    if (gameState === "playing") {
+      setGameState("over");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const avgTime = reactionTimes.length > 0 
+    ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length) 
+    : 0;
+
+  return (
+    <section className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-background">
+      
+      {/* Background Grid & Ambient Glows */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-[20%] left-[5%] h-[800px] w-[800px] rounded-full bg-amber-500/[0.03] blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[10%] h-[600px] w-[600px] rounded-full bg-blue-500/[0.03] blur-[120px]" />
+        <div 
+          className="absolute inset-0 opacity-[0.02]" 
+          style={{
+            backgroundImage: "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+            maskImage: "linear-gradient(to bottom, black 20%, transparent 90%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 20%, transparent 90%)"
+          }} 
+        />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-[1400px] px-5 py-24 sm:px-8 lg:px-12 xl:px-16 grid lg:grid-cols-[1fr_480px] gap-16 lg:gap-12 items-center">
+        
+        {/* Left Column: Editorial Typography */}
+        <div className="flex flex-col z-10 relative">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+            className="flex items-center gap-3 mb-8"
+          >
+            <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-muted">
+              The competitive FPS index
+            </span>
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-heading text-[clamp(3.5rem,7vw,7.5rem)] font-bold uppercase leading-[0.85] tracking-[-0.03em] text-foreground"
+          >
+            Master the
+            <span className="block text-muted/50">meta.</span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-8 max-w-md text-[16px] leading-relaxed text-muted"
+          >
+            Ballistics, maps, modes and operators — meticulously documented. Live Elo, tier progression and realtime squad chat. Built for those who play to win.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-12 flex flex-wrap items-center gap-5"
+          >
+            {!mounted ? (
+              <div className="h-12 w-48 animate-pulse rounded-full bg-foreground/10" />
+            ) : isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]"
+              >
+                <LayoutDashboard className="size-4" />
+                Open dashboard
+                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard/login"
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]"
+              >
+                Create free account
+                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            )}
+            
+            <Link
+              href="/weapons"
+              className="group flex items-center gap-2 text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+            >
+              Browse database
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Right Column: Interactive Aim Trainer */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }}
+          className="relative z-10 w-full max-w-[480px] mx-auto lg:ml-auto"
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/60 shadow-2xl backdrop-blur-xl">
+            
+            {/* HUD Header */}
+            <div className="flex items-center justify-between border-b border-border bg-background/80 px-5 py-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-6 items-center justify-center rounded bg-amber-500/10 text-amber-500">
+                  <Target size={14} />
+                </div>
+                <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-foreground">Aim Trainer</span>
+              </div>
+              <div className="flex items-center gap-4 font-mono text-[11px] font-medium text-muted">
+                <span className="flex items-center gap-1.5">
+                  <Crosshair size={12} className={gameState === "playing" ? "text-rose-500" : ""} /> 
+                  {hits} / 5
+                </span>
+                <span className="text-foreground/50">|</span>
+                <span>Best: <span className="text-amber-500">{bestTime ? `${bestTime}ms` : "--"}</span></span>
+              </div>
+            </div>
+
+            {/* Game Area */}
+            <div 
+              onClick={handleMiss}
+              className={`relative h-[420px] w-full overflow-hidden cursor-crosshair transition-colors duration-300 ${
+                gameState === "playing" ? "bg-foreground/[0.02]" : "bg-background/40"
+              }`}
+            >
+              <AnimatePresence>
+                {gameState === "playing" && (
+                  <motion.div
+                    key="target"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="absolute flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-crosshair items-center justify-center"
+                    style={{ left: `${targetPos.x}%`, top: `${targetPos.y}%` }}
+                    onClick={handleHit}
+                  >
+                    {/* Target Rings */}
+                    <div className="absolute inset-0 rounded-full border border-rose-500/30 animate-ping" />
+                    <div className="absolute inset-2 rounded-full border border-rose-500/50" />
+                    <div className="absolute inset-4 rounded-full bg-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.4)]" />
+                    <div className="size-2 rounded-full bg-rose-500" />
+                  </motion.div>
+                )}
+
+                {lastHit && gameState === "playing" && (
+                  <motion.div
+                    key={`hit-${lastHit.id}`}
+                    initial={{ scale: 0.5, opacity: 1 }}
+                    animate={{ scale: 2, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center pointer-events-none"
+                    style={{ left: `${lastHit.x}%`, top: `${lastHit.y}%` }}
+                  >
+                    <Zap size={32} className="text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+                  </motion.div>
+                )}
+
+                {gameState === "idle" && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center"
+                  >
+                    <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-foreground/[0.03] border border-border text-foreground">
+                      <Crosshair size={28} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-[18px] font-bold text-foreground">Test your reaction time</h3>
+                    <p className="mt-2 max-w-[240px] text-[13px] leading-relaxed text-muted">
+                      Hit 5 targets as fast as you can. Clicking empty space will end the run.
+                    </p>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); startGame(); }}
+                      className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-6 text-[13px] font-bold text-background transition-transform hover:scale-105"
+                    >
+                      <Flame size={14} /> Start Drill
+                    </button>
+                  </motion.div>
+                )}
+
+                {gameState === "over" && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/60 backdrop-blur-md"
+                  >
+                    <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
+                      <Target size={24} />
+                    </div>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Drill Complete</h3>
+                    
+                    <div className="mt-8 grid grid-cols-2 gap-8">
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono text-4xl font-bold text-foreground">{hits}</span>
+                        <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted">Hits</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono text-4xl font-bold text-amber-500">{avgTime}<span className="text-lg">ms</span></span>
+                        <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted">Avg Time</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); startGame(); }}
+                      className="mt-10 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-surface px-6 text-[13px] font-bold text-foreground transition-colors hover:bg-foreground/5"
+                    >
+                      Try Again <ArrowRight size={14} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

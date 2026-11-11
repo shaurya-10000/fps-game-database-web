@@ -1,0 +1,424 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, useRef, useSyncExternalStore } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, LayoutDashboard, Target, Crosshair, Zap, Flame, MousePointerClick, Activity, Timer, BrainCircuit, RotateCcw } from "lucide-react";
+import { getToken, isTokenValid } from "@/lib/auth";
+
+type Stats = { weapons: number; characters: number; maps: number; modes: number; throwables: number; equipment: number; };
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+export default function Hero({ stats }: { stats: Stats }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+
+  const [activeTab, setActiveTab] = useState<"aim" | "click" | "reaction" | "memory">("aim");
+
+  // --- Aim Trainer State ---
+  const [aimState, setAimState] = useState<"idle" | "playing" | "over">("idle");
+  const [targetPos, setTargetPos] = useState({ x: 50, y: 50 });
+  const [hits, setHits] = useState(0);
+  const [reactionTimes, setReactionTimes] = useState<number[]>([]);
+  const [bestAimTime, setBestAimTime] = useState<number | null>(null);
+  const [lastHit, setLastHit] = useState<{ x: number; y: number; id: number } | null>(null);
+  const spawnTime = useRef(0);
+  const aimTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // --- Click Test State ---
+  const [clickState, setClickState] = useState<"idle" | "playing" | "over">("idle");
+  const [clicks, setClicks] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(3);
+  const [bestCps, setBestCps] = useState<number | null>(null);
+  const clickTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // --- Reaction Test State ---
+  const [reactState, setReactState] = useState<"idle" | "waiting" | "ready" | "over" | "tooSoon">("idle");
+  const [reactTime, setReactTime] = useState(0);
+  const [bestReactTime, setBestReactTime] = useState<number | null>(null);
+  const reactTimeout = useRef<NodeJS.Timeout | null>(null);
+  const reactStart = useRef(0);
+
+  // --- Memory Sequence State ---
+  const [memState, setMemState] = useState<"idle" | "showing" | "waiting" | "input" | "over">("idle");
+  const [sequence, setSequence] = useState<number[]>([]);
+  const [userInput, setUserInput] = useState<number[]>([]);
+  const [activeMemBox, setActiveMemBox] = useState<number | null>(null);
+  const [bestLevel, setBestLevel] = useState<number>(0);
+  const [memError, setMemError] = useState(false);
+  const memTimeouts = useRef<NodeJS.Timeout[]>([]);
+
+  useEffect(() => {
+    const check = () => setIsLoggedIn(isTokenValid(getToken()));
+    check();
+    window.addEventListener("fps-auth-changed", check);
+    return () => window.removeEventListener("fps-auth-changed", check);
+  }, []);
+
+  useEffect(() => {
+    setAimState("idle"); setClickState("idle"); setReactState("idle"); setMemState("idle");
+    if (aimTimeout.current) clearTimeout(aimTimeout.current);
+    if (clickTimer.current) clearInterval(clickTimer.current);
+    if (reactTimeout.current) clearTimeout(reactTimeout.current);
+    memTimeouts.current.forEach(clearTimeout);
+  }, [activeTab]);
+
+  // --- Aim Logic ---
+  const startAim = () => { setAimState("playing"); setHits(0); setReactionTimes([]); setLastHit(null); spawnTarget(); };
+  const spawnTarget = () => {
+    setTargetPos({ x: Math.floor(Math.random() * 70) + 15, y: Math.floor(Math.random() * 70) + 15 });
+    spawnTime.current = Date.now();
+    if (aimTimeout.current) clearTimeout(aimTimeout.current);
+    aimTimeout.current = setTimeout(() => setAimState("over"), 1800);
+  };
+  const handleAimHit = (e: React.MouseEvent) => {
+    e.stopPropagation(); if (aimState !== "playing") return;
+    const time = Date.now() - spawnTime.current;
+    const newTimes = [...reactionTimes, time];
+    setReactionTimes(newTimes);
+    if (bestAimTime === null || time < bestAimTime) setBestAimTime(time);
+    const newHits = hits + 1; setHits(newHits); setLastHit({ x: targetPos.x, y: targetPos.y, id: Date.now() });
+    if (newHits >= 5) { setAimState("over"); if (aimTimeout.current) clearTimeout(aimTimeout.current); } else spawnTarget();
+  };
+  const handleAimMiss = () => { if (aimState === "playing") { setAimState("over"); if (aimTimeout.current) clearTimeout(aimTimeout.current); } };
+  const avgAimTime = reactionTimes.length > 0 ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length) : 0;
+
+  // --- Click Logic ---
+  const startClick = () => {
+    setClickState("playing"); setClicks(0); setTimeLeft(3);
+    if (clickTimer.current) clearInterval(clickTimer.current);
+    clickTimer.current = setInterval(() => {
+      setTimeLeft((prev) => { if (prev <= 1) { clearInterval(clickTimer.current!); setClickState("over"); return 0; } return prev - 1; });
+    }, 1000);
+  };
+  const handleClick = () => { if (clickState === "playing") setClicks((c) => c + 1); };
+  useEffect(() => { if (clickState === "over" && clicks > 0) { const cps = clicks / 3; if (bestCps === null || cps > bestCps) setBestCps(cps); } }, [clickState, clicks, bestCps]);
+
+  // --- Reaction Logic ---
+  const startReaction = () => {
+    setReactState("waiting");
+    const delay = Math.floor(Math.random() * 2000) + 1500;
+    reactTimeout.current = setTimeout(() => { setReactState("ready"); reactStart.current = Date.now(); }, delay);
+  };
+  const handleReactionClick = () => {
+    if (reactState === "idle" || reactState === "over" || reactState === "tooSoon") startReaction();
+    else if (reactState === "waiting") { if (reactTimeout.current) clearTimeout(reactTimeout.current); setReactState("tooSoon"); }
+    else if (reactState === "ready") {
+      const time = Date.now() - reactStart.current; setReactTime(time);
+      if (bestReactTime === null || time < bestReactTime) setBestReactTime(time);
+      setReactState("over");
+    }
+  };
+
+  // --- Memory Logic ---
+  const playSequence = (seq: number[]) => {
+    setMemState("showing");
+    setActiveMemBox(null);
+    memTimeouts.current.forEach(clearTimeout);
+    memTimeouts.current = [];
+
+    seq.forEach((box, index) => {
+      // Add a small random variance to the flash timing so it's not perfectly robotic
+      const flashOn = setTimeout(() => setActiveMemBox(box), index * 600);
+      const flashOff = setTimeout(() => setActiveMemBox(null), index * 600 + 400);
+      memTimeouts.current.push(flashOn, flashOff);
+    });
+
+    const endTimer = setTimeout(() => {
+      setMemState("input");
+      setUserInput([]);
+      setActiveMemBox(null);
+    }, seq.length * 600);
+    memTimeouts.current.push(endTimer);
+  };
+
+  const startMemory = () => {
+    const initialSeq = [Math.floor(Math.random() * 9)];
+    setSequence(initialSeq);
+    setUserInput([]);
+    setMemError(false);
+    playSequence(initialSeq);
+  };
+
+  const handleMemClick = (index: number) => {
+    if (memState !== "input") return;
+
+    const newInput = [...userInput, index];
+    setUserInput(newInput);
+
+    if (sequence[newInput.length - 1] !== index) {
+      setMemError(true);
+      setMemState("over");
+      if (sequence.length - 1 > bestLevel) setBestLevel(sequence.length - 1);
+      return;
+    }
+
+    if (newInput.length === sequence.length) {
+      setMemState("waiting"); // Pause for a breath
+      
+      // Increase difficulty based on level
+      const newLevel = sequence.length;
+      let nextSeq = [...sequence];
+      
+      if (newLevel >= 3) {
+        // Above level 3, shuffle the existing sequence to break the old pattern memory
+        nextSeq = nextSeq.sort(() => Math.random() - 0.5);
+      }
+      
+      // Add the new box. 20% chance to add TWO boxes after level 5
+      const boxesToAdd = (newLevel >= 5 && Math.random() < 0.2) ? 2 : 1;
+      for(let i=0; i<boxesToAdd; i++) {
+        // 30% chance to insert in the middle instead of the end
+        if (Math.random() < 0.3) {
+            const insertPos = Math.floor(Math.random() * nextSeq.length);
+            nextSeq.splice(insertPos, 0, Math.floor(Math.random() * 9));
+        } else {
+            nextSeq.push(Math.floor(Math.random() * 9));
+        }
+      }
+
+      setSequence(nextSeq);
+      
+      // Wait 800ms before playing the new, harder sequence
+      setTimeout(() => playSequence(nextSeq), 800);
+    }
+  };
+
+  return (
+    <section className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-background">
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-[20%] left-[5%] h-[800px] w-[800px] rounded-full bg-amber-500/[0.03] blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[10%] h-[600px] w-[600px] rounded-full bg-blue-500/[0.03] blur-[120px]" />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-[1400px] px-5 py-24 sm:px-8 lg:px-12 xl:px-16 grid lg:grid-cols-[1fr_480px] gap-16 lg:gap-12 items-center">
+        
+        <div className="flex flex-col z-10 relative">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex items-center gap-3 mb-8">
+            <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-muted">The competitive FPS index</span>
+          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="font-heading text-[clamp(3.5rem,7vw,7.5rem)] font-bold uppercase leading-[0.85] tracking-[-0.03em] text-foreground">
+            Master the<span className="block text-muted/50">meta.</span>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="mt-8 max-w-md text-[16px] leading-relaxed text-muted">
+            Ballistics, maps, modes and operators — meticulously documented. Live Elo, tier progression and realtime squad chat. Built for those who play to win.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-12 flex flex-wrap items-center gap-5">
+            {!mounted ? (
+              <div className="h-12 w-48 animate-pulse rounded-full bg-foreground/10" />
+            ) : isLoggedIn ? (
+              <Link href="/dashboard" className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]">
+                <LayoutDashboard className="size-4" /> Open dashboard <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            ) : (
+              <Link href="/dashboard/login" className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]">
+                Create free account <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </Link>
+            )}
+            <Link href="/weapons" className="group flex items-center gap-2 text-[14px] font-medium text-muted transition-colors hover:text-foreground">Browse database <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></Link>
+          </motion.div>
+        </div>
+
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="relative z-10 w-full max-w-[480px] mx-auto lg:ml-auto">
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/60 shadow-2xl backdrop-blur-xl">
+            
+            <div className="flex items-center justify-between border-b border-border bg-background/80 px-2 py-2">
+              <div className="flex gap-1">
+                <button onClick={() => setActiveTab("aim")} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-colors ${activeTab === "aim" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                  <Target size={13} className={activeTab === "aim" ? "text-amber-500" : ""} /> Aim
+                </button>
+                <button onClick={() => setActiveTab("click")} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-colors ${activeTab === "click" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                  <MousePointerClick size={13} className={activeTab === "click" ? "text-blue-500" : ""} /> Click
+                </button>
+                <button onClick={() => setActiveTab("reaction")} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-colors ${activeTab === "reaction" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                  <Timer size={13} className={activeTab === "reaction" ? "text-emerald-500" : ""} /> React
+                </button>
+                <button onClick={() => setActiveTab("memory")} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-colors ${activeTab === "memory" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                  <BrainCircuit size={13} className={activeTab === "memory" ? "text-fuchsia-500" : ""} /> Memory
+                </button>
+              </div>
+              <div className="pr-2 font-mono text-[10px] font-medium text-muted">
+                {activeTab === "aim" && <span>Best: <span className="text-amber-500">{bestAimTime ? `${bestAimTime}ms` : "--"}</span></span>}
+                {activeTab === "click" && <span>Best: <span className="text-blue-500">{bestCps ? `${bestCps.toFixed(1)} cps` : "--"}</span></span>}
+                {activeTab === "reaction" && <span>Best: <span className="text-emerald-500">{bestReactTime ? `${bestReactTime}ms` : "--"}</span></span>}
+                {activeTab === "memory" && <span>Best: <span className="text-fuchsia-500">Lvl {bestLevel}</span></span>}
+              </div>
+            </div>
+
+            <div className="relative h-[420px] w-full overflow-hidden">
+              
+              {activeTab === "aim" && (
+                <div onClick={handleAimMiss} className={`w-full h-full cursor-crosshair transition-colors duration-300 ${aimState === "playing" ? "bg-foreground/[0.02]" : "bg-background/40"}`}>
+                  <AnimatePresence>
+                    {aimState === "playing" && (
+                      <motion.div key="target" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className="absolute flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-crosshair items-center justify-center" style={{ left: `${targetPos.x}%`, top: `${targetPos.y}%` }} onClick={handleAimHit}>
+                        <div className="absolute inset-0 rounded-full border border-rose-500/30 animate-ping" />
+                        <div className="absolute inset-2 rounded-full border border-rose-500/50" />
+                        <div className="absolute inset-4 rounded-full bg-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.4)]" />
+                        <div className="size-2 rounded-full bg-rose-500" />
+                      </motion.div>
+                    )}
+                    {lastHit && aimState === "playing" && (
+                      <motion.div key={`hit-${lastHit.id}`} initial={{ scale: 0.5, opacity: 1 }} animate={{ scale: 2, opacity: 0 }} transition={{ duration: 0.3 }} className="absolute flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center pointer-events-none" style={{ left: `${lastHit.x}%`, top: `${lastHit.y}%` }}>
+                        <Zap size={32} className="text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+                      </motion.div>
+                    )}
+                    {aimState === "idle" && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                        <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-foreground/[0.03] border border-border text-foreground"><Crosshair size={28} strokeWidth={1.5} /></div>
+                        <h3 className="text-[18px] font-bold text-foreground">Test your reaction time</h3>
+                        <p className="mt-2 max-w-[240px] text-[13px] leading-relaxed text-muted">Hit 5 targets as fast as you can. Clicking empty space will end the run.</p>
+                        <button onClick={(e) => { e.stopPropagation(); startAim(); }} className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-6 text-[13px] font-bold text-background transition-transform hover:scale-105"><Flame size={14} /> Start Drill</button>
+                      </motion.div>
+                    )}
+                    {aimState === "over" && (
+                      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/60 backdrop-blur-md">
+                        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-500"><Target size={24} /></div>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Drill Complete</h3>
+                        <div className="mt-8 grid grid-cols-2 gap-8">
+                          <div className="flex flex-col items-center"><span className="font-mono text-4xl font-bold text-foreground">{hits}</span><span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted">Hits</span></div>
+                          <div className="flex flex-col items-center"><span className="font-mono text-4xl font-bold text-amber-500">{avgAimTime}<span className="text-lg">ms</span></span><span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted">Avg Time</span></div>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); startAim(); }} className="mt-10 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-surface px-6 text-[13px] font-bold text-foreground transition-colors hover:bg-foreground/5">Try Again <ArrowRight size={14} /></button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {activeTab === "click" && (
+                <div onClick={clickState === "playing" ? handleClick : undefined} className={`w-full h-full transition-colors duration-300 ${clickState === "playing" ? "bg-blue-500/[0.02] cursor-pointer" : "bg-background/40"}`}>
+                  <AnimatePresence>
+                    {clickState === "idle" && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                        <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-foreground/[0.03] border border-border text-foreground"><MousePointerClick size={28} strokeWidth={1.5} /></div>
+                        <h3 className="text-[18px] font-bold text-foreground">Click Speed Test</h3>
+                        <p className="mt-2 max-w-[240px] text-[13px] leading-relaxed text-muted">Click anywhere in this box as fast as you can for 3 seconds.</p>
+                        <button onClick={(e) => { e.stopPropagation(); startClick(); }} className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-6 text-[13px] font-bold text-background transition-transform hover:scale-105"><Activity size={14} /> Start Test</button>
+                      </motion.div>
+                    )}
+                    {clickState === "playing" && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <div className="text-[80px] font-black font-mono leading-none tracking-tighter text-blue-500 drop-shadow-xl">{clicks}</div>
+                        <div className="mt-2 text-[14px] font-bold uppercase tracking-widest text-muted">{timeLeft}s remaining</div>
+                      </motion.div>
+                    )}
+                    {clickState === "over" && (
+                      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/60 backdrop-blur-md">
+                        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-500"><Activity size={24} /></div>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Test Complete</h3>
+                        <div className="mt-8 grid grid-cols-2 gap-8">
+                          <div className="flex flex-col items-center"><span className="font-mono text-4xl font-bold text-foreground">{clicks}</span><span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted">Total Clicks</span></div>
+                          <div className="flex flex-col items-center"><span className="font-mono text-4xl font-bold text-blue-500">{(clicks / 3).toFixed(1)}</span><span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted">Clicks / Sec</span></div>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); startClick(); }} className="mt-10 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-surface px-6 text-[13px] font-bold text-foreground transition-colors hover:bg-foreground/5">Try Again <ArrowRight size={14} /></button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {activeTab === "reaction" && (
+                <div onClick={handleReactionClick} className={`w-full h-full cursor-pointer transition-colors duration-200 flex flex-col items-center justify-center text-center p-8 select-none ${reactState === "waiting" ? "bg-rose-500/10" : ""} ${reactState === "ready" ? "bg-emerald-500/20" : ""} ${reactState === "over" || reactState === "idle" || reactState === "tooSoon" ? "bg-background/40" : ""}`}>
+                  <AnimatePresence mode="wait">
+                    {reactState === "idle" && (
+                      <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-foreground/[0.03] border border-border text-foreground mx-auto"><Timer size={28} strokeWidth={1.5} /></div>
+                        <h3 className="text-[18px] font-bold text-foreground">Reaction Time</h3>
+                        <p className="mt-2 max-w-[240px] text-[13px] leading-relaxed text-muted mx-auto">Click when the box turns green. Don't click too early!</p>
+                        <div className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-6 text-[13px] font-bold text-background">Click to Start</div>
+                      </motion.div>
+                    )}
+                    {reactState === "waiting" && (
+                      <motion.div key="waiting" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-rose-500">Wait for Green...</h3>
+                      </motion.div>
+                    )}
+                    {reactState === "ready" && (
+                      <motion.div key="ready" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                        <h3 className="text-4xl font-black uppercase tracking-tight text-emerald-500">Click!</h3>
+                      </motion.div>
+                    )}
+                    {reactState === "tooSoon" && (
+                      <motion.div key="tooSoon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-rose-500">Too Soon!</h3>
+                        <p className="mt-2 text-[13px] text-muted">You clicked before the green screen.</p>
+                        <div className="mt-6 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-surface px-6 text-[13px] font-bold text-foreground">Try Again</div>
+                      </motion.div>
+                    )}
+                    {reactState === "over" && (
+                      <motion.div key="over" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mx-auto"><Timer size={24} /></div>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Reaction Time</h3>
+                        <div className="mt-6 flex flex-col items-center">
+                          <span className="font-mono text-5xl font-bold text-emerald-500">{reactTime}<span className="text-xl">ms</span></span>
+                          <span className="mt-2 text-[11px] font-bold uppercase tracking-wider text-muted">Avg human: 250ms</span>
+                        </div>
+                        <div className="mt-8 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-surface px-6 text-[13px] font-bold text-foreground">Try Again <ArrowRight size={14} /></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {activeTab === "memory" && (
+                <div className="w-full h-full bg-background/40 p-6 flex flex-col justify-center">
+                  {memState === "idle" && (
+                    <div className="flex flex-col items-center text-center">
+                      <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-foreground/[0.03] border border-border text-foreground"><BrainCircuit size={28} strokeWidth={1.5} /></div>
+                      <h3 className="text-[18px] font-bold text-foreground">Sequence Memory</h3>
+                      <p className="mt-2 max-w-[240px] text-[13px] leading-relaxed text-muted">Memorize the pattern of flashing boxes, then repeat it back.</p>
+                      <button onClick={startMemory} className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-6 text-[13px] font-bold text-background transition-transform hover:scale-105">Start Sequence</button>
+                    </div>
+                  )}
+
+                  {(memState === "showing" || memState === "waiting" || memState === "input") && (
+                    <>
+                      <div className="text-center mb-6 h-6">
+                        {memState === "showing" && <span className="text-[14px] font-bold text-fuchsia-500 animate-pulse">Watch carefully...</span>}
+                        {memState === "waiting" && <span className="text-[14px] font-bold text-amber-500">Get ready...</span>}
+                        {memState === "input" && <span className="text-[14px] font-bold text-foreground">Repeat the pattern ({userInput.length}/{sequence.length})</span>}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mx-auto aspect-square">
+                        {Array.from({ length: 9 }).map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleMemClick(i)}
+                            disabled={memState !== "input"}
+                            className={`rounded-xl border transition-all duration-150 ${
+                              i === activeMemBox 
+                                ? "border-fuchsia-500 bg-fuchsia-500/80 shadow-[0_0_20px_rgba(217,70,239,0.6)] scale-[1.05]" 
+                                : memError && userInput[userInput.length-1] === i
+                                  ? "border-rose-500 bg-rose-500/20"
+                                  : "border-border bg-surface/50 hover:bg-foreground/5 disabled:opacity-50 disabled:hover:bg-surface/50"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {memState === "over" && (
+                    <div className="flex flex-col items-center text-center">
+                      <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-rose-500/10 text-rose-500 mx-auto"><RotateCcw size={24} /></div>
+                      <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Game Over</h3>
+                      <div className="mt-6 flex flex-col items-center">
+                        <span className="font-mono text-5xl font-bold text-fuchsia-500">Lvl {sequence.length - 1}</span>
+                        <span className="mt-2 text-[11px] font-bold uppercase tracking-wider text-muted">Sequence Reached</span>
+                      </div>
+                      <button onClick={startMemory} className="mt-8 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-surface px-6 text-[13px] font-bold text-foreground transition-colors hover:bg-foreground/5">Try Again <ArrowRight size={14} /></button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
