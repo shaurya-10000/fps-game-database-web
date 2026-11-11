@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Menu as MenuIcon, X as CloseIcon, Home, ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -58,7 +58,6 @@ function DiamondMark() {
 }
 
 function Brand() {
-  const reduceMotion = useReducedMotion();
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -368,6 +367,7 @@ export default function Header() {
     </header>
   );
 }
+
 
 
 

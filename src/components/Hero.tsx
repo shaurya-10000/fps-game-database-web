@@ -16,7 +16,7 @@ const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-export default function Hero() {
+export default function Hero({ stats }: { stats: Stats }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
@@ -274,6 +274,14 @@ export default function Hero() {
             )}
             <Link href="/weapons" className="group flex items-center gap-2 text-[14px] font-medium text-muted transition-colors hover:text-foreground">Browse database <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></Link>
           </motion.div>
+
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }} className="mt-10 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-muted/70">
+            {stats.weapons + stats.characters + stats.maps + stats.modes + stats.throwables + stats.equipment} entries indexed
+            <span className="mx-2 text-muted/30">·</span>
+            {stats.weapons} weapons
+            <span className="mx-2 text-muted/30">·</span>
+            {stats.maps} maps
+          </motion.p>
         </div>
 
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="relative z-10 w-full max-w-[480px] mx-auto lg:ml-auto px-0">
@@ -534,6 +542,9 @@ export default function Hero() {
     </section>
   );
 }
+
+
+
 
 
 
