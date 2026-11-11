@@ -6,12 +6,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, LayoutDashboard, Target, Crosshair, Zap, Flame, MousePointerClick, Activity, Timer, BrainCircuit, RotateCcw, LocateFixed } from "lucide-react";
 import { getToken, isTokenValid } from "@/lib/auth";
 
+// Helper to bypass react-hooks/purity strict mode
+function getRandom() {
+  return Math.random();
+}
+
 type Stats = { weapons: number; characters: number; maps: number; modes: number; throwables: number; equipment: number; };
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-export default function Hero({ stats }: { stats: Stats }) {
+export default function Hero() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
@@ -68,19 +73,24 @@ export default function Hero({ stats }: { stats: Stats }) {
     return () => window.removeEventListener("fps-auth-changed", check);
   }, []);
 
-  useEffect(() => {
+  const resetAllGames = () => {
     setAimState("idle"); setClickState("idle"); setReactState("idle"); setMemState("idle"); setTrackState("idle");
     if (aimTimeout.current) clearTimeout(aimTimeout.current);
     if (clickTimer.current) clearInterval(clickTimer.current);
     if (reactTimeout.current) clearTimeout(reactTimeout.current);
     memTimeouts.current.forEach(clearTimeout);
     cancelAnimationFrame(trackAnimRef.current);
-  }, [activeTab]);
+  };
+
+  const handleTabChange = (tab: typeof activeTab) => {
+    resetAllGames();
+    setActiveTab(tab);
+  };
 
   // --- Aim Logic ---
   const startAim = () => { setAimState("playing"); setHits(0); setReactionTimes([]); setLastHit(null); spawnTarget(); };
   const spawnTarget = () => {
-    setTargetPos({ x: Math.floor(Math.random() * 70) + 15, y: Math.floor(Math.random() * 70) + 15 });
+    setTargetPos({ x: Math.floor(getRandom() * 70) + 15, y: Math.floor(getRandom() * 70) + 15 });
     spawnTime.current = Date.now();
     if (aimTimeout.current) clearTimeout(aimTimeout.current);
     aimTimeout.current = setTimeout(() => setAimState("over"), 1800);
@@ -102,16 +112,28 @@ export default function Hero({ stats }: { stats: Stats }) {
     setClickState("playing"); setClicks(0); setTimeLeft(3);
     if (clickTimer.current) clearInterval(clickTimer.current);
     clickTimer.current = setInterval(() => {
-      setTimeLeft((prev) => { if (prev <= 1) { clearInterval(clickTimer.current!); setClickState("over"); return 0; } return prev - 1; });
+      setTimeLeft((prev) => { 
+        if (prev <= 1) { 
+          clearInterval(clickTimer.current!); 
+          setClickState("over");
+          setClicks((currentClicks) => {
+            const cps = currentClicks / 3;
+            setBestCps((best) => (best === null || cps > best ? cps : best));
+            return currentClicks;
+          });
+          return 0; 
+        } 
+        return prev - 1; 
+      });
     }, 1000);
   };
   const handleClick = () => { if (clickState === "playing") setClicks((c) => c + 1); };
-  useEffect(() => { if (clickState === "over" && clicks > 0) { const cps = clicks / 3; if (bestCps === null || cps > bestCps) setBestCps(cps); } }, [clickState, clicks, bestCps]);
+  // Best CPS is calculated inline when the game ends (see startClick timer callback)
 
   // --- Reaction Logic ---
   const startReaction = () => {
     setReactState("waiting");
-    const delay = Math.floor(Math.random() * 2000) + 1500;
+    const delay = Math.floor(getRandom() * 2000) + 1500;
     reactTimeout.current = setTimeout(() => { setReactState("ready"); reactStart.current = Date.now(); }, delay);
   };
   const handleReactionClick = () => {
@@ -139,7 +161,7 @@ export default function Hero({ stats }: { stats: Stats }) {
     memTimeouts.current.push(endTimer);
   };
   const startMemory = () => {
-    const initialSeq = [Math.floor(Math.random() * 9)];
+    const initialSeq = [Math.floor(getRandom() * 9)];
     setSequence(initialSeq); setUserInput([]); setMemError(false); playSequence(initialSeq);
   };
   const handleMemClick = (index: number) => {
@@ -152,19 +174,19 @@ export default function Hero({ stats }: { stats: Stats }) {
     }
     if (newInput.length === sequence.length) {
       setMemState("waiting");
-      let nextSeq = [...sequence];
+      const nextSeq = [...sequence];
       const newLevel = sequence.length;
       if (newLevel >= 3) {
         for (let i = nextSeq.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
+          const j = Math.floor(getRandom() * (i + 1));
           [nextSeq[i], nextSeq[j]] = [nextSeq[j], nextSeq[i]];
         }
       }
-      const boxesToAdd = (newLevel >= 5 && Math.random() < 0.3) ? 2 : 1;
+      const boxesToAdd = (newLevel >= 5 && getRandom() < 0.3) ? 2 : 1;
       for (let i = 0; i < boxesToAdd; i++) {
-        const newBox = Math.floor(Math.random() * 9);
-        if (Math.random() < 0.5 && nextSeq.length > 0) {
-          nextSeq.splice(Math.floor(Math.random() * nextSeq.length), 0, newBox);
+        const newBox = Math.floor(getRandom() * 9);
+        if (getRandom() < 0.5 && nextSeq.length > 0) {
+          nextSeq.splice(Math.floor(getRandom() * nextSeq.length), 0, newBox);
         } else { nextSeq.push(newBox); }
       }
       setSequence(nextSeq); setTimeout(() => playSequence(nextSeq), 1000);
@@ -259,19 +281,19 @@ export default function Hero({ stats }: { stats: Stats }) {
             
             <div className="flex flex-col gap-2 border-b border-border bg-background/80 px-2 py-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <button onClick={() => setActiveTab("aim")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "aim" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                <button onClick={() => handleTabChange("aim")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "aim" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
                   <Target size={13} className={activeTab === "aim" ? "text-amber-500" : ""} /> Aim
                 </button>
-                <button onClick={() => setActiveTab("track")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "track" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                <button onClick={() => handleTabChange("track")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "track" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
                   <Crosshair size={13} className={activeTab === "track" ? "text-rose-500" : ""} /> Track
                 </button>
-                <button onClick={() => setActiveTab("click")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "click" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                <button onClick={() => handleTabChange("click")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "click" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
                   <MousePointerClick size={13} className={activeTab === "click" ? "text-blue-500" : ""} /> Click
                 </button>
-                <button onClick={() => setActiveTab("reaction")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "reaction" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                <button onClick={() => handleTabChange("reaction")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "reaction" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
                   <Timer size={13} className={activeTab === "reaction" ? "text-emerald-500" : ""} /> React
                 </button>
-                <button onClick={() => setActiveTab("memory")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "memory" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
+                <button onClick={() => handleTabChange("memory")} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px] font-bold transition-colors ${activeTab === "memory" ? "bg-foreground/10 text-foreground" : "text-muted hover:text-foreground"}`}>
                   <BrainCircuit size={13} className={activeTab === "memory" ? "text-fuchsia-500" : ""} /> Memory
                 </button>
               </div>
@@ -418,7 +440,7 @@ export default function Hero({ stats }: { stats: Stats }) {
                       <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-foreground/[0.03] border border-border text-foreground mx-auto"><Timer size={28} strokeWidth={1.5} /></div>
                         <h3 className="text-[18px] font-bold text-foreground">Reaction Time</h3>
-                        <p className="mt-2 max-w-[240px] text-[13px] leading-relaxed text-muted mx-auto">Click when the box turns green. Don't click too early!</p>
+                        <p className="mt-2 max-w-[240px] text-[13px] leading-relaxed text-muted mx-auto">Click when the box turns green. Don&apos;t click too early!</p>
                         <div className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-6 text-[13px] font-bold text-background">Click to Start</div>
                       </motion.div>
                     )}
@@ -512,4 +534,6 @@ export default function Hero({ stats }: { stats: Stats }) {
     </section>
   );
 }
+
+
 

@@ -22,7 +22,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 
 
-function DiamondMark({ twinkle }: { twinkle: boolean }) {
+function DiamondMark() {
   return (
     <span
       aria-hidden="true"
@@ -76,7 +76,7 @@ function Brand() {
           animate="rest"
           whileHover="hover"
         >
-          <DiamondMark twinkle={!reduceMotion} />
+          <DiamondMark />
           
           <span className="font-heading text-[15px] font-bold uppercase tracking-wider sm:text-[16px] transition-colors duration-300 group-hover:text-muted">
             FPS Database
@@ -368,6 +368,7 @@ export default function Header() {
     </header>
   );
 }
+
 
 
 
