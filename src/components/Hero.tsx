@@ -2,25 +2,29 @@
 
 import Link from "next/link";
 import { useEffect, useState, useRef, useSyncExternalStore } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowRight, LayoutDashboard, Target, Crosshair, Zap, Flame, MousePointerClick, Activity, Timer, BrainCircuit, RotateCcw, LocateFixed } from "lucide-react";
 import { getToken, isTokenValid } from "@/lib/auth";
-
-// Helper to bypass react-hooks/purity strict mode
-function getRandom() {
-  return Math.random();
-}
-
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
+function getRandom() {
+  return Math.random();
+}
+
 export default function Hero() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
-
   const [activeTab, setActiveTab] = useState<"aim" | "click" | "reaction" | "memory" | "track">("aim");
+
+  // --- Grid cursor state ---
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const smoothX = useSpring(mouseX, { stiffness: 60, damping: 20 });
+  const smoothY = useSpring(mouseY, { stiffness: 60, damping: 20 });
 
   // --- Aim Trainer State ---
   const [aimState, setAimState] = useState<"idle" | "playing" | "over">("idle");
@@ -72,6 +76,13 @@ export default function Hero() {
     window.addEventListener("fps-auth-changed", check);
     return () => window.removeEventListener("fps-auth-changed", check);
   }, []);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
 
   const resetAllGames = () => {
     setAimState("idle"); setClickState("idle"); setReactState("idle"); setMemState("idle"); setTrackState("idle");
@@ -128,7 +139,6 @@ export default function Hero() {
     }, 1000);
   };
   const handleClick = () => { if (clickState === "playing") setClicks((c) => c + 1); };
-  // Best CPS is calculated inline when the game ends (see startClick timer callback)
 
   // --- Reaction Logic ---
   const startReaction = () => {
@@ -186,8 +196,11 @@ export default function Hero() {
       for (let i = 0; i < boxesToAdd; i++) {
         const newBox = Math.floor(getRandom() * 9);
         if (getRandom() < 0.5 && nextSeq.length > 0) {
-          nextSeq.splice(Math.floor(getRandom() * nextSeq.length), 0, newBox);
-        } else { nextSeq.push(newBox); }
+          const insertPos = Math.floor(getRandom() * nextSeq.length);
+          nextSeq.splice(insertPos, 0, newBox);
+        } else { 
+          nextSeq.push(newBox); 
+        }
       }
       setSequence(nextSeq); setTimeout(() => playSequence(nextSeq), 1000);
     }
@@ -201,13 +214,12 @@ export default function Hero() {
     trackHitsRef.current = 0;
     trackTimeRef.current = 0;
     const startTime = Date.now();
-    const w = 300, h = 300; // game area size
+    const w = 300, h = 300;
 
     const loop = () => {
       const elapsed = Date.now() - startTime;
       trackTimeRef.current = elapsed;
       
-      // Figure 8 math
       const t = elapsed / 1000;
       const centerX = w / 2;
       const centerY = h / 2;
@@ -241,19 +253,48 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-background">
+    <section 
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-background"
+    >
+      
+      {/* Background: Cursor-reactive grid + glow */}
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-[20%] left-[5%] h-[800px] w-[800px] rounded-full bg-amber-500/[0.03] blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[10%] h-[600px] w-[600px] rounded-full bg-blue-500/[0.03] blur-[120px]" />
+        {/* Base faint grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+          }}
+        />
+
+        {/* Cursor-reactive white grid glow */}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+            opacity: 0.22,
+            maskImage: useTransform(
+              [smoothX, smoothY],
+              ([x, y]) => `radial-gradient(500px circle at ${x}px ${y}px, black 15%, transparent 75%)`
+            ),
+            WebkitMaskImage: useTransform(
+              [smoothX, smoothY],
+              ([x, y]) => `radial-gradient(500px circle at ${x}px ${y}px, black 15%, transparent 75%)`
+            ),
+          }}
+        />
+
+        {/* Ambient glow behind widget */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[700px] w-[700px] bg-[radial-gradient(circle,rgba(245,158,11,0.08)_0%,transparent_70%)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-[1400px] px-4 py-12 sm:px-8 sm:py-24 lg:px-12 xl:px-16 grid lg:grid-cols-[1fr_480px] gap-8 sm:gap-16 lg:gap-12 items-center">
+      <div className="relative mx-auto w-full max-w-[1400px] px-4 py-12 sm:px-8 sm:py-24 lg:px-12 xl:px-16 grid lg:grid-cols-[1fr_480px] gap-8 sm:gap-16 lg:gap-12 items-center z-10">
         
-        <div className="flex flex-col z-10 relative">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex items-center gap-3 mb-8">
-            <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-muted">The FPS social platform</span>
-          </motion.div>
+        <div className="flex flex-col relative pointer-events-auto">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="font-heading text-[clamp(3.5rem,7vw,7.5rem)] font-bold uppercase leading-[0.85] tracking-[-0.03em] text-foreground">
             Squad up.<span className="block text-muted/50">Track your climb.</span>
           </motion.h1>
@@ -272,13 +313,11 @@ export default function Hero() {
                 Create free account <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
               </Link>
             )}
-
           </motion.div>
-
         </div>
 
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="relative z-10 w-full max-w-[480px] mx-auto lg:ml-auto px-0">
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/60 shadow-2xl backdrop-blur-xl">
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="relative w-full max-w-[480px] mx-auto lg:ml-auto pointer-events-auto">
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/80 shadow-2xl backdrop-blur-xl">
             
             <div className="flex flex-col gap-2 border-b border-border bg-background/80 px-2 py-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -374,7 +413,7 @@ export default function Hero() {
                         </div>
                       </div>
                       
-                      <div className="flex-1 relative overflow-hidden" onPointerLeave={() => isHoveringTarget.current = false}>
+                      <div className="flex-1 relative overflow-hidden touch-none" onPointerLeave={() => isHoveringTarget.current = false}>
                         <div 
                           ref={targetRef}
                           onPointerEnter={() => isHoveringTarget.current = true}
@@ -535,12 +574,3 @@ export default function Hero() {
     </section>
   );
 }
-
-
-
-
-
-
-
-
-

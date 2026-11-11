@@ -7,7 +7,7 @@ import ThrowablesSection from "@/components/sections/ThrowablesSection";
 import EquipmentSection from "@/components/sections/EquipmentSection";
 import LeaderboardSection from "@/components/sections/LeaderboardSection";
 import { 
-  getCatalogSummary, getWeapons, getCharacters, getMaps, getModes, getThrowables, getEquipment 
+  getWeapons, getCharacters, getMaps, getModes, getThrowables, getEquipment 
 } from "@/lib/catalog";
 
 export default async function HomePage() {
@@ -15,7 +15,6 @@ export default async function HomePage() {
   const [
     weapons, characters, maps, modes, throwables, equipment
   ] = await Promise.all([
-    
     getWeapons(),
     getCharacters(),
     getMaps(),
@@ -37,5 +36,4 @@ export default async function HomePage() {
     </div>
   );
 }
-
 
