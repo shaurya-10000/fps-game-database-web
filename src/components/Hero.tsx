@@ -11,12 +11,12 @@ function getRandom() {
   return Math.random();
 }
 
-type Stats = { weapons: number; characters: number; maps: number; modes: number; throwables: number; equipment: number; };
+
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-export default function Hero({ stats }: { stats: Stats }) {
+export default function Hero() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
@@ -252,13 +252,13 @@ export default function Hero({ stats }: { stats: Stats }) {
         <div className="flex flex-col z-10 relative">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex items-center gap-3 mb-8">
             <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-muted">The competitive FPS index</span>
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-muted">The FPS social platform</span>
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="font-heading text-[clamp(3.5rem,7vw,7.5rem)] font-bold uppercase leading-[0.85] tracking-[-0.03em] text-foreground">
-            Master the<span className="block text-muted/50">meta.</span>
+            Squad up.<span className="block text-muted/50">Track your climb.</span>
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="mt-8 max-w-md text-[16px] leading-relaxed text-muted">
-            Ballistics, maps, modes and operators — meticulously documented. Live Elo, tier progression and realtime squad chat. Built for those who play to win.
+            Chat with your squad, call them in real-time, climb the leaderboard, and look up any weapon, map, or operator in the game. Built for players, by players.
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-12 flex flex-wrap items-center gap-5">
             {!mounted ? (
@@ -272,16 +272,9 @@ export default function Hero({ stats }: { stats: Stats }) {
                 Create free account <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
               </Link>
             )}
-            <Link href="/weapons" className="group flex items-center gap-2 text-[14px] font-medium text-muted transition-colors hover:text-foreground">Browse database <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></Link>
+
           </motion.div>
 
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }} className="mt-10 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-muted/70">
-            {stats.weapons + stats.characters + stats.maps + stats.modes + stats.throwables + stats.equipment} entries indexed
-            <span className="mx-2 text-muted/30">·</span>
-            {stats.weapons} weapons
-            <span className="mx-2 text-muted/30">·</span>
-            {stats.maps} maps
-          </motion.p>
         </div>
 
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="relative z-10 w-full max-w-[480px] mx-auto lg:ml-auto px-0">
@@ -542,6 +535,9 @@ export default function Hero({ stats }: { stats: Stats }) {
     </section>
   );
 }
+
+
+
 
 
 

@@ -13,9 +13,9 @@ import {
 export default async function HomePage() {
   // Fetch everything in parallel on the server
   const [
-    stats, weapons, characters, maps, modes, throwables, equipment
+    weapons, characters, maps, modes, throwables, equipment
   ] = await Promise.all([
-    getCatalogSummary("v1"),
+    
     getWeapons(),
     getCharacters(),
     getMaps(),
@@ -26,7 +26,7 @@ export default async function HomePage() {
 
   return (
     <div className="relative">
-      <Hero stats={stats} />
+      <Hero />
       <CharactersSection characters={characters} />
       <ModesSection modes={modes} />
       <WeaponsSection weapons={weapons} />
@@ -37,3 +37,5 @@ export default async function HomePage() {
     </div>
   );
 }
+
+
