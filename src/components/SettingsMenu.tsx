@@ -9,6 +9,45 @@ const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
+function ToggleSwitch({ enabled }: { enabled: boolean }) {
+  return (
+    <div
+      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${
+        enabled ? "bg-foreground" : "bg-foreground/20"
+      }`}
+    >
+      <span
+        className={`inline-block size-4 rounded-full bg-background shadow-sm transition-transform duration-200 ${
+          enabled ? "translate-x-[18px]" : "translate-x-0.5"
+        }`}
+      />
+    </div>
+  );
+}
+
+function MenuRow({
+  icon: Icon,
+  label,
+  children,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  children?: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-foreground/[0.05] focus-visible:bg-foreground/[0.05] focus-visible:outline-none"
+    >
+      <Icon size={15} className="shrink-0 text-muted" strokeWidth={1.8} />
+      <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">{label}</span>
+      {children}
+    </button>
+  );
+}
+
 export default function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
@@ -47,44 +86,28 @@ export default function SettingsMenu() {
           isOpen ? "border-accent bg-accent/10 text-accent" : "border-border text-muted hover:text-foreground"
         }`}
         aria-label="Settings"
+        aria-expanded={isOpen}
       >
         <Settings size={16} strokeWidth={1.8} className={`transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-xl border border-border bg-surface shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="border-b border-border px-4 py-3 bg-background/50">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">Preferences</span>
-          </div>
-          
-          <div className="p-2 space-y-1">
-            <button
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-background shadow-2xl animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="p-1.5">
+            <MenuRow
+              icon={isDark ? Moon : Sun}
+              label="Dark mode"
               onClick={() => setTheme(isDark ? "light" : "dark")}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-[13px] font-medium text-foreground transition-colors hover:bg-foreground/5"
             >
-              <div className="flex items-center gap-2.5">
-                {isDark ? <Moon size={16} className="text-accent" /> : <Sun size={16} className="text-amber-500" />}
-                <span>Dark Mode</span>
-              </div>
-              
-              <div className={`relative inline-flex h-5 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${isDark ? "bg-accent" : "bg-zinc-300 dark:bg-zinc-700"}`}>
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${isDark ? "translate-x-2" : "-translate-x-2"}`} />
-              </div>
-            </button>
-
-            <button
+              <ToggleSwitch enabled={isDark} />
+            </MenuRow>
+            <MenuRow
+              icon={soundEnabled ? Volume2 : VolumeX}
+              label="UI sounds"
               onClick={() => toggleSound(!soundEnabled)}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-[13px] font-medium text-foreground transition-colors hover:bg-foreground/5"
             >
-              <div className="flex items-center gap-2.5">
-                {soundEnabled ? <Volume2 size={16} className="text-accent" /> : <VolumeX size={16} className="text-muted" />}
-                <span>UI Sounds</span>
-              </div>
-              
-              <div className={`relative inline-flex h-5 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${soundEnabled ? "bg-accent" : "bg-zinc-300 dark:bg-zinc-700"}`}>
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${soundEnabled ? "translate-x-2" : "-translate-x-2"}`} />
-              </div>
-            </button>
+              <ToggleSwitch enabled={soundEnabled} />
+            </MenuRow>
           </div>
         </div>
       )}
