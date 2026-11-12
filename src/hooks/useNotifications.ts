@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import type { Socket } from "socket.io-client";
 import { api } from "@/lib/api";
 
@@ -21,53 +20,63 @@ export interface AppNotification {
 const STORAGE_KEY = "fps.notifications";
 const MAX_NOTIFICATIONS = 50;
 
-// Persistent AudioContext so it doesn't get blocked
+// ─── Audio ────────────────────────────────────────────────────────────
 let sharedCtx: AudioContext | null = null;
-let audioUnlocked = false;
 
-// Call this on ANY user click to unlock audio
-export function unlockAudio() {
-  if (audioUnlocked) return;
+function ensureCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
   try {
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return;
-    if (!sharedCtx) sharedCtx = new Ctx();
+    if (!sharedCtx) {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return null;
+      sharedCtx = new Ctx();
+    }
     if (sharedCtx.state === "suspended") void sharedCtx.resume();
-    audioUnlocked = true;
-  } catch { /* ignore */ }
+    return sharedCtx;
+  } catch {
+    return null;
+  }
+}
+
+// Called on first user interaction anywhere
+export function unlockAudio() {
+  const ctx = ensureCtx();
+  if (ctx && ctx.state === "suspended") void ctx.resume();
 }
 
 if (typeof window !== "undefined") {
-  // Unlock on the first pointerdown anywhere in the app
-  window.addEventListener("pointerdown", unlockAudio, { once: true });
-  window.addEventListener("keydown", unlockAudio, { once: true });
+  ["pointerdown", "keydown", "touchstart"].forEach((evt) => {
+    window.addEventListener(evt, unlockAudio, { once: true, passive: true });
+  });
 }
 
 function playChime() {
+  const ctx = ensureCtx();
+  if (!ctx) return;
   try {
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return;
-    if (!sharedCtx) sharedCtx = new Ctx();
-    const ctx = sharedCtx;
-    if (ctx.state === "suspended") void ctx.resume();
-
-    const t = ctx.currentTime;
-    [988, 1319].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "triangle";
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.0001, t + i * 0.08);
-      gain.gain.linearRampToValueAtTime(0.1, t + i * 0.08 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.08 + 0.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t + i * 0.08);
-      osc.stop(t + i * 0.08 + 0.25);
-    });
+    if (ctx.state === "suspended") void ctx.resume().then(() => playChimeOnce(ctx));
+    else playChimeOnce(ctx);
   } catch { /* ignore */ }
 }
 
+function playChimeOnce(ctx: AudioContext) {
+  const t = ctx.currentTime;
+  [988, 1319].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t + i * 0.08);
+    gain.gain.linearRampToValueAtTime(0.1, t + i * 0.08 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.08 + 0.2);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t + i * 0.08);
+    osc.stop(t + i * 0.08 + 0.25);
+  });
+}
+
+// ─── Storage ──────────────────────────────────────────────────────────
 function load(): AppNotification[] {
   if (typeof window === "undefined") return [];
   try {
@@ -86,11 +95,10 @@ function save(list: AppNotification[]) {
   } catch { /* ignore */ }
 }
 
+// ─── Hook ─────────────────────────────────────────────────────────────
 export function useNotifications(socket: Socket | null = null) {
   const [notifications, setNotifications] = useState<AppNotification[]>(() => load());
-  const router = useRouter();
 
-  // Listen for changes from other components/tabs
   useEffect(() => {
     const onChange = () => setNotifications(load());
     window.addEventListener("fps-notifications-changed", onChange);
@@ -109,24 +117,22 @@ export function useNotifications(socket: Socket | null = null) {
       read: false,
     };
     const current = load();
-    const next = [notification, ...current].slice(0, MAX_NOTIFICATIONS);
-    save(next);
-    setNotifications(next);
+    save([notification, ...current]);
+    setNotifications([notification, ...current]);
     toast(notification.title, { description: notification.description });
     playChime();
   }, []);
 
   const markRead = useCallback((id: string) => {
-    const current = load();
-    const next = current.map((n) => (n.id === id ? { ...n, read: true } : n));
+    const next = load().map((n) => (n.id === id ? { ...n, read: true } : n));
     save(next);
     setNotifications(next);
   }, []);
 
   const markAllRead = useCallback(() => {
-    const current = load();
-    save(current.map((n) => ({ ...n, read: true })));
-    setNotifications(current.map((n) => ({ ...n, read: true })));
+    const next = load().map((n) => ({ ...n, read: true }));
+    save(next);
+    setNotifications(next);
   }, []);
 
   const clearAll = useCallback(() => {
@@ -134,7 +140,17 @@ export function useNotifications(socket: Socket | null = null) {
     setNotifications([]);
   }, []);
 
-  // Poll friend requests
+  // Navigation helper — uses window.location for reliability across contexts
+  const navigateTo = useCallback((n: AppNotification) => {
+    markRead(n.id);
+    if (n.kind === "message" && n.meta?.senderId) {
+      window.location.href = `/dashboard/dms?dm=${encodeURIComponent(n.meta.senderId)}`;
+    } else if (n.kind === "friend-request") {
+      window.location.href = "/dashboard/friends";
+    }
+  }, [markRead]);
+
+  // Friend request polling
   useEffect(() => {
     let cancelled = false;
     async function pollFriendRequests() {
@@ -159,13 +175,10 @@ export function useNotifications(socket: Socket | null = null) {
     }
     void pollFriendRequests();
     const interval = setInterval(pollFriendRequests, 60_000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
+    return () => { cancelled = true; clearInterval(interval); };
   }, [push]);
 
-  // Socket events (when socket is provided)
+  // Socket events
   useEffect(() => {
     if (!socket) return;
     const onChatActivity = (a: { roomId: string; senderId: string; senderName: string; preview: string }) => {
@@ -192,18 +205,9 @@ export function useNotifications(socket: Socket | null = null) {
     };
   }, [socket, push]);
 
-  const navigateTo = useCallback((n: AppNotification) => {
-    markRead(n.id);
-    if (n.kind === "message" && n.meta?.senderId) {
-      router.push(`/dashboard/dms?dm=${encodeURIComponent(n.meta.senderId)}`);
-    } else if (n.kind === "friend-request") {
-      router.push("/dashboard/friends");
-    }
-  }, [router, markRead]);
-
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Update browser tab title
+  // Tab title
   useEffect(() => {
     const base = "FPS Game Database";
     document.title = unreadCount > 0 ? `(${unreadCount}) ${base}` : base;

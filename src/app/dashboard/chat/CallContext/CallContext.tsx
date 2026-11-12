@@ -196,8 +196,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       live.off("presence_snapshot", onSnapshot);
       live.off("presence", onPresence);
       live.off("disconnect", onDisconnect);
-      live.off("chat_activity", onChatActivity);
-      live.off("incoming_call", onIncomingCall);
+
       manager.dispose();
       managerRef.current = null;
       setSocket(null);
@@ -281,3 +280,4 @@ export function useCall(): CallContextType {
   if (!ctx) throw new Error("useCall must be used within CallProvider");
   return ctx;
 }
+

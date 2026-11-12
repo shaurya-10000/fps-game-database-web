@@ -19,13 +19,13 @@ const ICON_MAP = {
 } as const;
 
 function timeAgo(ts: number): string {
-  const seconds = Math.floor((Date.now() - ts) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 export default function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
@@ -87,8 +87,10 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
                       <li
                         key={n.id}
                         onClick={() => {
+                          if (n.kind === "message" || n.kind === "friend-request") {
+                            onClose();
+                          }
                           navigateTo(n);
-                          if (n.kind === "message" || n.kind === "friend-request") onClose();
                         }}
                         className={cn(
                           "flex items-start gap-4 p-5 transition-colors hover:bg-foreground/[0.02] cursor-pointer",
@@ -140,4 +142,3 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
     </AnimatePresence>
   );
 }
-
