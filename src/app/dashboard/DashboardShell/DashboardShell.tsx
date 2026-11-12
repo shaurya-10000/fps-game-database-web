@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { PanelLeftOpen, PanelLeftClose, Home, LayoutDashboard, Users, MessageSquare, Settings, Crown } from "lucide-react";
+import { PanelLeftOpen, PanelLeftClose, Home, LayoutDashboard, Users, MessageSquare, Settings, Crown, Search, VolumeX, MoreVertical } from "lucide-react";
 import AuthGate from "../AuthGate";
 import FloatingSidebar, { type SidebarItem } from "@/components/DashboardSidebar/FloatingSidebar";
 import { clearToken } from "@/lib/auth";
+import DropdownMenu, { type MenuItem } from "@/app/dashboard/dms/DmsClient/ui/DropdownMenu";
 
 type NavId = "profile" | "dms" | "friends" | "chat";
 
@@ -44,6 +45,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [signOutError, setSignOutError] = useState<string | null>(null);
   
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [chatMenuItems, setChatMenuItems] = useState<MenuItem[]>([]);
+
+  useEffect(() => {
+    const handler = (e: Event) => setChatMenuItems((e as CustomEvent<MenuItem[]>).detail);
+    window.addEventListener("fps-chat-menu-items", handler);
+    return () => window.removeEventListener("fps-chat-menu-items", handler);
+  }, []);
 
   useEffect(() => {
     const update = () => {
@@ -103,35 +111,66 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       <div className="flex h-dvh flex-col overflow-hidden bg-background">
         
         {/* Top Navigation Bar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4 dark:border-white/[0.04]">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4 dark:border-white/[0.04] sm:px-6">
           <div className="flex items-center gap-4">
             <button
               ref={triggerRef}
               type="button"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
-              className="flex size-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="flex size-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
             >
               {isOpen ? <PanelLeftClose size={20} strokeWidth={1.5} /> : <PanelLeftOpen size={20} strokeWidth={1.5} />}
             </button>
             <div className="flex items-center gap-2.5">
               {(() => {
                 const ActiveIcon = NAV_ITEMS.find((item) => item.id === activeId)?.icon ?? LayoutDashboard;
-                return <ActiveIcon size={16} className="text-amber-500" />;
+                return <ActiveIcon size={20} className="text-amber-500" />;
               })()}
-              <span className="font-heading text-[13px] font-bold uppercase tracking-widest text-foreground">
+              <span className="font-heading text-[15px] font-bold uppercase tracking-widest text-foreground">
                 {NAV_ITEMS.find((item) => item.id === activeId)?.label ?? "Dashboard"}
               </span>
             </div>
           </div>
 
-          <Link
-            href="/"
-            aria-label="Back to main page"
-            className="flex size-9 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
-          >
-            <Home size={20} />
-          </Link>
+          <div className="flex items-center gap-1">
+            {pathname === "/dashboard/chat" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent("fps-chat-action", { detail: "search" }))}
+                  aria-label="Search messages"
+                  title="Search messages"
+                  className="flex size-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+                >
+                  <Search size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent("fps-chat-action", { detail: "muted" }))}
+                  aria-label="Muted players"
+                  title="Muted players"
+                  className="flex size-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+                >
+                  <VolumeX size={18} />
+                </button>
+                <DropdownMenu
+                  label="More options"
+                  items={chatMenuItems}
+                  align="end"
+                  trigger={<MoreVertical size={18} />}
+                  triggerClassName="flex size-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+                />
+              </>
+            )}
+            <Link
+              href="/"
+              aria-label="Back to main page"
+              className="flex size-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+            >
+              <Home size={20} />
+            </Link>
+          </div>
         </header>
 
         {/* Floating Drawer (Full screen on mobile) */}
@@ -179,6 +218,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
+
+
+
+
+
+
+
+
 
 
 

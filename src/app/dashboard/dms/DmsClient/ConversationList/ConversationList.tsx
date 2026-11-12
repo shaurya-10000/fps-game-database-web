@@ -3,8 +3,7 @@ import NotificationsPanel from "@/components/NotificationsPanel";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Archive, ArchiveRestore, Bell, BellOff, ChevronDown, LoaderCircle, Menu, Pin, PinOff, Search, Settings, Users } from "lucide-react";
-import { requestOpenSidebar } from "@/app/dashboard/DashboardShell/sidebar-events";
+import { Archive, ArchiveRestore, Bell, BellOff, ChevronDown, LoaderCircle, Pin, PinOff, Search, Settings, Users } from "lucide-react";
 import { ChatAvatar } from "@/app/dashboard/chat/chat-shared";
 import { cn } from "@/lib/utils";
 import type { DmFriend, GroupSummary } from "../types";
@@ -287,20 +286,27 @@ export default function ConversationList({
 
   return (
     <aside className={cn("flex-col bg-surface/40", className)} aria-label="Conversations">
-      <div className="space-y-3 border-b border-border px-4 py-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={requestOpenSidebar}
-              aria-label="Open navigation"
-              className="-ml-1.5 flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-foreground/[0.07] hover:text-foreground lg:hidden"
-            >
-              <Menu size={20} />
-            </button>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">Messages</h2>
-          </div>
-          <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+        <label className="relative block flex-1">
+          <span className="sr-only">Search chats</span>
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            ref={searchRef}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setQuery("");
+            }}
+            placeholder="Search chats"
+            className="w-full rounded-lg border border-border bg-background py-1.5 pl-9 pr-12 text-[13px] text-foreground placeholder:text-muted/70 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+          />
+          <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted md:block">
+            Ctrl K
+          </kbd>
+        </label>
+        
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setNotificationsOpen(true)}
@@ -329,31 +335,12 @@ export default function ConversationList({
             onClick={onCreateGroup}
             disabled={friends.length === 0}
             title={friends.length === 0 ? "Add a friend first to start a group" : "Create a group chat"}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-accent/10 px-2.5 py-1.5 text-[12px] font-semibold text-accent transition-colors hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="ml-1 inline-flex size-8 items-center justify-center rounded-lg bg-foreground text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="New group"
           >
-            <Users size={14} />
-            New group
+            <Users size={16} />
           </button>
-          </div>
         </div>
-        <label className="relative block">
-          <span className="sr-only">Search chats</span>
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            ref={searchRef}
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setQuery("");
-            }}
-            placeholder="Search chats"
-            className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-12 text-base text-foreground sm:text-[13px] placeholder:text-muted/70 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
-          />
-          <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted md:block">
-            Ctrl K
-          </kbd>
-        </label>
       </div>
 
       {banner}
@@ -441,6 +428,9 @@ export default function ConversationList({
     </aside>
   );
 }
+
+
+
 
 
 

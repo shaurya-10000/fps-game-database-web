@@ -2,17 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, Eraser, EyeOff, Hash, Menu, MessageSquare, Palette, Search, Settings, UserPlus, VolumeX, WifiOff } from "lucide-react";
+import { Ban, Eraser, EyeOff, MessageSquare, Palette, Search, Settings, UserPlus, VolumeX, WifiOff } from "lucide-react";
 import { updateChatSettings, useChatSettings } from "@/lib/chat-settings";
 import ChatSettingsDialog from "@/app/dashboard/dms/DmsClient/dialogs/ChatSettingsDialog";
-import { requestOpenSidebar } from "@/app/dashboard/DashboardShell/sidebar-events";
 import { DEFAULT_THEME, chatContainerStyle, wallpaperStyle } from "@/app/dashboard/dms/DmsClient/themes";
 import ThemeDialog from "@/app/dashboard/dms/DmsClient/ui/ThemeDialog";
 import { GLOBAL_ROOM_ID } from "../chat-shared";
 import { blockPlayer, sendFriendRequest } from "@/lib/friends-api";
 import { uploadVoiceMessage } from "@/lib/chat-api";
 import { ApiError } from "@/lib/api";
-import { cn } from "@/lib/utils";
 import Composer from "@/app/dashboard/dms/DmsClient/Composer";
 import MessageList from "@/app/dashboard/dms/DmsClient/MessageList/MessageList";
 import SearchPanel from "@/app/dashboard/dms/DmsClient/panels/SearchPanel";
@@ -61,6 +59,21 @@ export default function GlobalChatClient() {
   const [jumpRequest, setJumpRequest] = useState<{ id: string; nonce: number } | null>(null);
   const drafts = useDraftStore();
 
+
+  // Listen for header actions (Search / Mute / Menu)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const action = (e as CustomEvent<string>).detail;
+      if (action === "search" || action === "muted") {
+        setPanel((prev) => (prev === action ? null : action));
+      } else if (action === "menu") {
+        setDialog({ kind: "settings" });
+      }
+    };
+    window.addEventListener("fps-chat-action", handler);
+    return () => window.removeEventListener("fps-chat-action", handler);
+  }, []);
+
   const {
     messages,
     pending,
@@ -87,8 +100,6 @@ export default function GlobalChatClient() {
     };
   }, [socket, showNotice]);
 
-  // ------------------------------------------------------------- derived data
-
   const friendIds = useMemo(() => new Set(friends.map((f) => f.playerId)), [friends]);
   const mutedSet = useMemo(() => new Set(mutes.muted), [mutes.muted]);
 
@@ -112,8 +123,6 @@ export default function GlobalChatClient() {
     const fromMutes = messages.filter((m) => mutedSet.has(m.senderId)).map((m) => m._id);
     return { hiddenIds: [...localHidden, ...fromMutes], mutedHiddenCount: fromMutes.length };
   }, [messages, mutedSet, localHidden]);
-
-  // ------------------------------------------------------------------ actions
 
   const addFriend = useCallback(
     async (playerId: string, name: string) => {
@@ -212,7 +221,6 @@ export default function GlobalChatClient() {
     [showNotice],
   );
 
-  const togglePanel = (kind: Panel) => setPanel((current) => (current === kind ? null : kind));
   const closePanel = useCallback(() => setPanel(null), []);
   const closeDialog = useCallback(() => setDialog(null), []);
 
@@ -226,7 +234,7 @@ export default function GlobalChatClient() {
     setDialog(null);
   };
 
-  const headerItems: MenuItem[] = [
+  const headerItems = useMemo<MenuItem[]>(() => [
     { id: "search", label: "Search messages", icon: Search, onSelect: () => setPanel("search") },
     { id: "muted", label: "Muted players", icon: VolumeX, onSelect: () => setPanel("muted") },
     { id: "theme", label: "Chat theme", icon: Palette, dividerBefore: true, onSelect: () => setDialog({ kind: "theme" }) },
@@ -243,84 +251,46 @@ export default function GlobalChatClient() {
         router.push("/dashboard/dms");
       },
     },
-  ];
+  ], [router]);
+
+  // Broadcast the menu items so DashboardShell can render them
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("fps-chat-menu-items", { detail: headerItems }));
+  }, [headerItems]);
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background">
-      <div className="flex min-w-0 flex-1 flex-col bg-background" style={chatContainerStyle(theme, settings.fontSize)}>
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4 sm:px-6">
-          <button
-            type="button"
-            onClick={requestOpenSidebar}
-            aria-label="Open navigation"
-            className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-foreground/[0.07] hover:text-foreground lg:hidden"
-          >
-            <Menu size={20} />
+    <div className="flex h-full w-full flex-col items-center overflow-hidden bg-background relative" style={chatContainerStyle(theme, settings.fontSize)}>
+      
+      {/* Hidden trigger that the top-bar three dots clicks */}
+      <div className="hidden">
+        <DropdownMenu
+          label="Chat options"
+          items={headerItems}
+          trigger={<span data-chat-menu-trigger />}
+        />
+      </div>
+
+      {!connected && (
+        <div
+          role="status"
+          className="flex w-full items-center justify-center gap-2 bg-amber-500/10 px-4 py-1.5 text-[12px] font-medium text-amber-600 dark:text-amber-400"
+        >
+          <WifiOff size={13} /> Reconnecting... messages can&apos;t be sent right now.
+        </div>
+      )}
+
+      {mutedHiddenCount > 0 && (
+        <div className="flex w-full items-center justify-center gap-2 bg-foreground/[0.04] px-4 py-1.5 text-[12px] text-muted">
+          <VolumeX size={13} />
+          {mutedHiddenCount} message{mutedHiddenCount === 1 ? "" : "s"} from muted players hidden.
+          <button type="button" onClick={() => setPanel("muted")} className="font-semibold text-accent hover:underline">
+            Manage
           </button>
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
-            <Hash size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-[15px] font-semibold text-foreground">Global Chat</h2>
-            <p className="truncate text-[12px] text-muted">Everyone on the platform. Be kind.</p>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <div className="hidden items-center gap-0.5 sm:flex">
-            <button
-              type="button"
-              onClick={() => togglePanel("search")}
-              aria-label="Search messages"
-              aria-pressed={panel === "search"}
-              title="Search messages"
-              className={cn(
-                "flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
-                panel === "search" ? "bg-accent/15 text-accent" : "text-muted hover:bg-foreground/[0.07] hover:text-foreground",
-              )}
-            >
-              <Search size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => togglePanel("muted")}
-              aria-label="Muted players"
-              aria-pressed={panel === "muted"}
-              title="Muted players"
-              className={cn(
-                "relative flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
-                panel === "muted" ? "bg-accent/15 text-accent" : "text-muted hover:bg-foreground/[0.07] hover:text-foreground",
-              )}
-            >
-              <VolumeX size={18} />
-              {mutes.muted.length > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-accent px-1 text-center text-[10px] font-bold leading-4 text-background">
-                  {mutes.muted.length}
-                </span>
-              )}
-            </button>
-            </div>
-            <DropdownMenu label="Chat options" items={headerItems} />
-          </div>
-        </header>
+        </div>
+      )}
 
-        {!connected && (
-          <div
-            role="status"
-            className="flex items-center justify-center gap-2 bg-amber-500/10 px-4 py-1.5 text-[12px] font-medium text-amber-600 dark:text-amber-400"
-          >
-            <WifiOff size={13} /> Reconnecting... messages can&apos;t be sent right now.
-          </div>
-        )}
-
-        {mutedHiddenCount > 0 && (
-          <div className="flex items-center justify-center gap-2 bg-foreground/[0.04] px-4 py-1.5 text-[12px] text-muted">
-            <VolumeX size={13} />
-            {mutedHiddenCount} message{mutedHiddenCount === 1 ? "" : "s"} from muted players hidden.
-            <button type="button" onClick={() => setPanel("muted")} className="font-semibold text-accent hover:underline">
-              Manage
-            </button>
-          </div>
-        )}
-
+      {/* Centered chat + composer wrapper */}
+      <div className="flex h-full w-full flex-col relative">
         <MessageList
           messages={messages}
           pending={pending}
@@ -360,31 +330,29 @@ export default function GlobalChatClient() {
           onDiscard={discard}
         />
 
-        <div className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-6 sm:pb-4">
-          <div className="w-full px-4 sm:px-8">
-            <TypingIndicator names={typingNames} />
-            <Composer
-              placeholder="Message #global"
-              enterToSend={settings.enterToSend}
-              disabled={!connected}
-              initialText={drafts.get(GLOBAL_ROOM_ID)}
-              mentionCandidates={mentionCandidates}
-              reply={
-                replyTo
-                  ? { messageId: replyTo._id, senderName: replyTo.senderName ?? "Unknown", preview: previewOf(replyTo) }
-                  : null
-              }
-              editing={editing ? { id: editing._id, content: editing.content } : null}
-              onTyping={notifyTyping}
-              onDraftChange={(text) => drafts.set(GLOBAL_ROOM_ID, text)}
-              onSend={handleSend}
-              onSaveEdit={handleSaveEdit}
-              onCancelReply={() => setReplyTo(null)}
-              onCancelEdit={() => setEditing(null)}
-              onSendVoice={handleSendVoice}
-              onError={showNotice}
-            />
-          </div>
+        <div className="shrink-0 px-3 pb-6 pt-1 sm:px-6 sm:pb-6">
+          <TypingIndicator names={typingNames} />
+          <Composer
+            placeholder="Message #global"
+            enterToSend={settings.enterToSend}
+            disabled={!connected}
+            initialText={drafts.get(GLOBAL_ROOM_ID)}
+            mentionCandidates={mentionCandidates}
+            reply={
+              replyTo
+                ? { messageId: replyTo._id, senderName: replyTo.senderName ?? "Unknown", preview: previewOf(replyTo) }
+                : null
+            }
+            editing={editing ? { id: editing._id, content: editing.content } : null}
+            onTyping={notifyTyping}
+            onDraftChange={(text) => drafts.set(GLOBAL_ROOM_ID, text)}
+            onSend={handleSend}
+            onSaveEdit={handleSaveEdit}
+            onCancelReply={() => setReplyTo(null)}
+            onCancelEdit={() => setEditing(null)}
+            onSendVoice={handleSendVoice}
+            onError={showNotice}
+          />
         </div>
       </div>
 
@@ -434,6 +402,8 @@ export default function GlobalChatClient() {
     </div>
   );
 }
+
+
 
 
 

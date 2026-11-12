@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, UserPlus } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useCall } from "@/app/dashboard/chat/CallContext";
 import { useTransientMessage } from "@/app/dashboard/dms/DmsClient/hooks/useTransientMessage";
 import ConfirmDialog from "@/app/dashboard/dms/DmsClient/ui/ConfirmDialog";
@@ -69,30 +69,11 @@ export default function FriendsClient() {
 
   if (data.loading) return <FriendsSkeleton />;
 
-  const onlineCount = data.friends.filter((f) => onlineIds.has(f.playerId)).length;
-  const subtitle =
-    data.friends.length === 0
-      ? "Find players and build your squad."
-      : `${data.friends.length} friend${data.friends.length === 1 ? "" : "s"} - ${onlineCount} online`;
+
 
   return (
     <div className="w-full space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Social</div>
-          <h1 className="mt-1.5 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">Friends</h1>
-          <p className="mt-1 text-[14px] text-muted">{subtitle}</p>
-        </div>
-        {tab !== "add" && (
-          <button
-            type="button"
-            onClick={() => setTab("add")}
-            className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-[13px] font-semibold text-background transition-opacity hover:opacity-90"
-          >
-            <UserPlus size={15} /> Add friend
-          </button>
-        )}
-        </header>
+            
 
       {data.error && (
         <div
@@ -214,6 +195,13 @@ export default function FriendsClient() {
     </div>
   );
 }
+
+
+
+
+
+
+
 
 
 

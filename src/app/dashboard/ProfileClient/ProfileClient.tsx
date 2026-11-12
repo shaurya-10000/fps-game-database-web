@@ -31,7 +31,7 @@ export default function ProfileClient() {
 
   return (
     <div className="w-full space-y-6">
-      <h1 className="sr-only">Your profile</h1>
+      
 
       {profile.failed && (
         <div
@@ -94,4 +94,5 @@ export default function ProfileClient() {
     </div>
   );
 }
+
 
