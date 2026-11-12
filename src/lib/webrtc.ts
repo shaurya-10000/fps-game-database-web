@@ -171,6 +171,7 @@ export class WebRTCManager {
   private endedTimer: ReturnType<typeof setTimeout> | null = null;
   private noticeTimer: ReturnType<typeof setTimeout> | null = null;
   private statsTimer: ReturnType<typeof setInterval> | null = null;
+  private everConnectedAt: number | null = null;
 
   constructor(socket: Socket, options: ManagerOptions = {}) {
     this.socket = socket;
@@ -533,10 +534,12 @@ export class WebRTCManager {
     switch (pc.connectionState) {
       case "connected":
         if (this.state.status === "connecting" || this.state.status === "active") {
+          const now = this.state.connectedAt ?? Date.now();
+          this.everConnectedAt = now;
           this.setState({
             status: "active",
             connection: "connected",
-            connectedAt: this.state.connectedAt ?? Date.now(),
+            connectedAt: now,
           });
           this.startStats(pc);
         }
@@ -820,6 +823,7 @@ export class WebRTCManager {
   /** Releases every device/connection resource and invalidates in-flight async work. */
   private teardown(): void {
     this.session += 1;
+    this.everConnectedAt = null;
     this.clearRingTimer();
     this.stopStats();
 
@@ -933,3 +937,5 @@ export class WebRTCManager {
     this.noticeTimer = null;
   }
 }
+
+

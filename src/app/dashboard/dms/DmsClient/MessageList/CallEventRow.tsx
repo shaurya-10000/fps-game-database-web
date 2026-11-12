@@ -5,9 +5,13 @@ import type { CallEvent } from "../types";
 
 function describe(event: CallEvent): string {
   const label = event.kind === "video" ? "Video call" : "Voice call";
+  // Backfill: any call with real duration is completed, regardless of stored outcome.
+  if (event.durationSec > 0) {
+    return `${label} - ${formatDuration(event.durationSec)}`;
+  }
   switch (event.outcome) {
     case "completed":
-      return event.durationSec > 0 ? `${label} - ${formatDuration(event.durationSec)}` : label;
+      return label;
     case "declined":
       return event.mine ? "Call declined" : "You declined a call";
     case "no-answer":
