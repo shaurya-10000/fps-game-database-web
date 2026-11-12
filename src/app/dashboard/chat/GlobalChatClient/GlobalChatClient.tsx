@@ -259,7 +259,7 @@ export default function GlobalChatClient() {
   }, [headerItems]);
 
   return (
-    <div className="flex h-full w-full flex-col items-center overflow-hidden bg-background relative" style={chatContainerStyle(theme, settings.fontSize)}>
+    <div className="flex h-full w-full overflow-hidden bg-background" style={chatContainerStyle(theme, settings.fontSize)}>
       
       {/* Hidden trigger that the top-bar three dots clicks */}
       <div className="hidden">
@@ -270,27 +270,27 @@ export default function GlobalChatClient() {
         />
       </div>
 
-      {!connected && (
-        <div
-          role="status"
-          className="flex w-full items-center justify-center gap-2 bg-amber-500/10 px-4 py-1.5 text-[12px] font-medium text-amber-600 dark:text-amber-400"
-        >
-          <WifiOff size={13} /> Reconnecting... messages can&apos;t be sent right now.
-        </div>
-      )}
+      {/* Chat column (banners + messages + composer stacked vertically) */}
+      <div className="flex min-w-0 flex-1 flex-col relative">
 
-      {mutedHiddenCount > 0 && (
-        <div className="flex w-full items-center justify-center gap-2 bg-foreground/[0.04] px-4 py-1.5 text-[12px] text-muted">
-          <VolumeX size={13} />
-          {mutedHiddenCount} message{mutedHiddenCount === 1 ? "" : "s"} from muted players hidden.
-          <button type="button" onClick={() => setPanel("muted")} className="font-semibold text-accent hover:underline">
-            Manage
-          </button>
-        </div>
-      )}
+        {!connected && (
+          <div
+            role="status"
+            className="flex w-full items-center justify-center gap-2 bg-amber-500/10 px-4 py-1.5 text-[12px] font-medium text-amber-600 dark:text-amber-400"
+          >
+            <WifiOff size={13} /> Reconnecting... messages can&apos;t be sent right now.
+          </div>
+        )}
 
-      {/* Centered chat + composer wrapper */}
-      <div className="flex h-full w-full flex-col relative">
+        {mutedHiddenCount > 0 && (
+          <div className="flex w-full items-center justify-center gap-2 bg-foreground/[0.04] px-4 py-1.5 text-[12px] text-muted">
+            <VolumeX size={13} />
+            {mutedHiddenCount} message{mutedHiddenCount === 1 ? "" : "s"} from muted players hidden.
+            <button type="button" onClick={() => setPanel("muted")} className="font-semibold text-accent hover:underline">
+              Manage
+            </button>
+          </div>
+        )}
         <MessageList
           messages={messages}
           pending={pending}
@@ -402,6 +402,8 @@ export default function GlobalChatClient() {
     </div>
   );
 }
+
+
 
 
 

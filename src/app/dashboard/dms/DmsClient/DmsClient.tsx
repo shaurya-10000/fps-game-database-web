@@ -413,7 +413,7 @@ export default function DmsClient() {
         className={cn("w-full shrink-0 border-r border-border md:w-80 lg:w-[22rem]", conversation ? "hidden md:flex" : "flex")}
       />
 
-      <section className={cn("relative min-w-0 flex-1 flex flex-col", conversation ? "flex" : "hidden md:flex")}>
+      <section className={cn("relative min-w-0 flex-1 flex flex-row overflow-hidden", conversation ? "flex" : "hidden md:flex")}>
         {conversation && roomId ? (
           <>
             <div className="flex min-w-0 flex-1 flex-col" style={chatContainerStyle(themeSetting, settings.fontSize)}>
@@ -684,6 +684,7 @@ export default function DmsClient() {
     </div>
   );
 }
+
 
 
 
