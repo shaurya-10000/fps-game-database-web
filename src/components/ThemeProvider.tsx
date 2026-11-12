@@ -7,11 +7,11 @@ export function ThemeProvider({
   children,
   ...props
 }: ComponentProps<typeof NextThemesProvider>) {
-  // We use a wrapper to ensure React doesn't complain about next-themes 
-  // injecting its script tag during hydration.
   return (
-    <NextThemesProvider {...props}>
-      {children}
-    </NextThemesProvider>
+    <div suppressHydrationWarning>
+      <NextThemesProvider {...props}>
+        {children}
+      </NextThemesProvider>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import NotificationsPanel from "@/components/NotificationsPanel";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -165,6 +166,31 @@ export default function ConversationList({
 }: ConversationListProps) {
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  
+  useEffect(() => {
+    const updateCount = () => {
+      try {
+        const stored = localStorage.getItem("fps.notifications");
+        if (stored) {
+          const list = JSON.parse(stored);
+          if (Array.isArray(list)) {
+            setUnreadCount(list.filter((n: { read: boolean }) => !n.read).length);
+          }
+        }
+      } catch { /* ignore */ }
+    };
+    
+    updateCount();
+    window.addEventListener("storage", updateCount);
+    const interval = setInterval(updateCount, 2000);
+    
+    return () => {
+      window.removeEventListener("storage", updateCount);
+      clearInterval(interval);
+    };
+  }, [notificationsOpen]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Ctrl/Cmd+K jumps to search from anywhere on the page.
@@ -276,6 +302,20 @@ export default function ConversationList({
             <h2 className="text-lg font-semibold tracking-tight text-foreground">Messages</h2>
           </div>
           <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setNotificationsOpen(true)}
+            aria-label="Notifications"
+            title="Notifications"
+            className="relative flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
           <button
             type="button"
             onClick={onOpenSettings}
@@ -394,6 +434,14 @@ export default function ConversationList({
           </>
         )}
       </div>
+      
+      <NotificationsPanel 
+        isOpen={notificationsOpen} 
+        onClose={() => setNotificationsOpen(false)} 
+      />
     </aside>
   );
 }
+
+
+

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SiteChrome from "@/components/SiteChrome";
@@ -59,10 +60,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SiteChrome header={<Header />} footer={<Footer />}>{children}</SiteChrome>
+          <Toaster position="bottom-right" theme="dark" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
 
 

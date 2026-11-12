@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { AtSign, Bell, LogOut, MessageCircle, Pencil, UserRound } from "lucide-react";
 import { clearToken } from "@/lib/auth";
 import { updateChatSettings, useChatSettings } from "@/lib/chat-settings";
-import { cn } from "@/lib/utils";
 import Card from "./Card";
 import type { ProfileIdentity } from "./types";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
@@ -110,3 +109,4 @@ export default function SettingsTab({ identity, onEdit, onChatSettings }: Settin
     </div>
   );
 }
+

@@ -1,11 +1,12 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu as MenuIcon, X as CloseIcon, Home, ArrowLeft, LayoutDashboard } from "lucide-react";
+import { Menu as MenuIcon, X as CloseIcon, Home, ArrowLeft, LayoutDashboard, Bell } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SettingsMenu from "./SettingsMenu";
+import NotificationsPanel from "./NotificationsPanel";
 
 const NAVIGATION = [
   { label: "Characters", href: "/characters" },
@@ -213,6 +214,35 @@ export default function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  
+  // Read unread count directly from the hook. 
+  // Since Header is outside the CallProvider, we just render the count that's persisted.
+  const [unreadCount, setUnreadCount] = useState(0);
+  useEffect(() => {
+    const updateCount = () => {
+      try {
+        const stored = localStorage.getItem("fps.notifications");
+        if (stored) {
+          const list = JSON.parse(stored);
+          if (Array.isArray(list)) {
+            setUnreadCount(list.filter((n: { read: boolean }) => !n.read).length);
+          }
+        }
+      } catch { /* ignore */ }
+    };
+    
+    updateCount(); // Initial check
+    // Listen for changes from other tabs or the dashboard
+    window.addEventListener("storage", updateCount);
+    // Poll every 2 seconds as a fallback for same-tab updates (since storage events don't fire same-tab)
+    const interval = setInterval(updateCount, 2000);
+    
+    return () => {
+      window.removeEventListener("storage", updateCount);
+      clearInterval(interval);
+    };
+  }, [notificationsOpen]); // Re-check when panel opens/closes
 
   useEffect(() => {
     const update = (): void => setScrolled(window.scrollY > 8);
@@ -235,6 +265,7 @@ export default function Header() {
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
 
   return (
+    <>
     <header
       className={`
         sticky top-0 z-50 box-border h-[76px] w-full shrink-0 border-b
@@ -287,6 +318,21 @@ export default function Header() {
           >
             <LayoutDashboard size={16} />
           </Link>
+
+          <button
+            type="button"
+            onClick={() => setNotificationsOpen(true)}
+            aria-label="Notifications"
+            title="Notifications"
+            className="relative mr-1 flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute right-0 top-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
           
           <SettingsMenu />
           <button
@@ -381,8 +427,23 @@ export default function Header() {
         )}
       </AnimatePresence>
     </header>
+    
+    {/* Move NotificationsPanel outside the <header> so it overlays the whole screen, not just the sticky header */}
+    <NotificationsPanel 
+      isOpen={notificationsOpen} 
+      onClose={() => setNotificationsOpen(false)} 
+    />
+    </>
   );
 }
+
+
+
+
+
+
+
+
 
 
 
