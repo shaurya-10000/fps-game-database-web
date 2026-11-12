@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Shield, UserPlus, MessageCircle, Phone, Check } from "lucide-react";
 import { useNotifications, type AppNotification } from "@/hooks/useNotifications";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface NotificationsPanelProps {
@@ -30,10 +29,7 @@ function timeAgo(ts: number): string {
 }
 
 export default function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
-  // Socket is intentionally not passed here to avoid requiring CallProvider in the global header.
-  const socket = null;
-  const { notifications, markAllRead, markRead, clearAll } = useNotifications(socket);
-  const router = useRouter();
+  const { notifications, markAllRead, clearAll, navigateTo } = useNotifications(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,14 +87,8 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
                       <li
                         key={n.id}
                         onClick={() => {
-                          markRead(n.id);
-                          if (n.kind === "message" && n.meta?.senderId) {
-                            onClose();
-                            router.push(`/dashboard/dms?dm=${n.meta.senderId}`);
-                          } else if (n.kind === "friend-request") {
-                            onClose();
-                            router.push("/dashboard/friends");
-                          }
+                          navigateTo(n);
+                          if (n.kind === "message" || n.kind === "friend-request") onClose();
                         }}
                         className={cn(
                           "flex items-start gap-4 p-5 transition-colors hover:bg-foreground/[0.02] cursor-pointer",
@@ -150,6 +140,4 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
     </AnimatePresence>
   );
 }
-
-
 

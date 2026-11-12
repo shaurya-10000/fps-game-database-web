@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import NotificationProvider from "@/components/NotificationProvider";
 import { Toaster } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -59,13 +60,16 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <SiteChrome header={<Header />} footer={<Footer />}>{children}</SiteChrome>
+          <NotificationProvider>
+            <SiteChrome header={<Header />} footer={<Footer />}>{children}</SiteChrome>
+          </NotificationProvider>
           <Toaster position="bottom-right" theme="dark" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
 
 
 
