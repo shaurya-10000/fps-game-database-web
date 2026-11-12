@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { X, LogOut, type LucideIcon } from "lucide-react";
+import { PanelLeftClose, LogOut, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface SidebarItem<T extends string> {
@@ -120,7 +120,7 @@ export default function FloatingSidebar<T extends string>({
         className={cn(
           "fixed bottom-3 left-3 top-3 z-[70] flex w-72 max-w-[calc(100vw-1.5rem)] flex-col rounded-[2rem] border p-5",
           "border-zinc-200 bg-zinc-50 shadow-2xl shadow-black/10",
-          "dark:border-white/[0.06] dark:bg-zinc-900 dark:shadow-black/50",
+          "dark:border-white/[0.04] dark:bg-[#0a0a0a] dark:shadow-black/80",
           "transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "translate-x-0" : "-translate-x-[calc(100%+1rem)]"
         )}
@@ -142,7 +142,7 @@ export default function FloatingSidebar<T extends string>({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
             )}
           >
-            <X size={18} />
+            <PanelLeftClose size={20} strokeWidth={1.5} />
           </button>
         </div>
 
@@ -169,8 +169,8 @@ export default function FloatingSidebar<T extends string>({
                   "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500",
                   isActive
-                    ? "bg-zinc-200/70 text-zinc-900 dark:bg-white/[0.07] dark:text-white"
-                    : "text-zinc-500 hover:bg-zinc-200/50 hover:text-zinc-900 dark:hover:bg-white/[0.04] dark:hover:text-white"
+                    ? "bg-zinc-200/80 text-zinc-900 dark:bg-white/[0.04] dark:text-white"
+                    : "text-zinc-500 hover:bg-zinc-200/50 hover:text-zinc-900 dark:hover:bg-white/[0.02] dark:hover:text-white"
                 )}
               >
                 {isActive && (
@@ -211,3 +211,4 @@ export default function FloatingSidebar<T extends string>({
     </>
   );
 }
+

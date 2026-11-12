@@ -79,7 +79,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     <AuthGate>
       <div className="flex h-dvh overflow-hidden bg-background">
         {/* Fixed Left Strip (64px wide) */}
-        <SidebarStrip onOpenMenu={() => setIsOpen(true)} onSignOut={signOut} triggerRef={triggerRef} />
+        <SidebarStrip onOpenMenu={() => setIsOpen(!isOpen)} onSignOut={signOut} triggerRef={triggerRef} isOpen={isOpen} />
 
         {/* Floating Drawer (slides in over the content) */}
         <FloatingSidebar<NavId>
@@ -125,3 +125,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
+
+
+
