@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AlertCircle, BarChart3, LayoutDashboard, Settings } from "lucide-react";
 import ChatSettingsDialog from "@/app/dashboard/dms/DmsClient/dialogs/ChatSettingsDialog";
 import AvatarUploadDialog from "./AvatarUploadDialog";
+import BannerUploadDialog from "./BannerUploadDialog";
 import EditProfileDialog from "./EditProfileDialog";
 import OverviewTab from "./OverviewTab";
 import ProfileHero from "./ProfileHero";
@@ -26,7 +27,7 @@ export default function ProfileClient() {
   const profile = useProfile();
   const reduceMotion = useReducedMotion();
   const [tab, setTab] = useState<TabId>("overview");
-  const [dialog, setDialog] = useState<"edit" | "chat" | "avatar" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "chat" | "avatar" | "banner" | null>(null);
 
   if (profile.loading) return <ProfileSkeleton />;
 
@@ -60,6 +61,7 @@ export default function ProfileClient() {
         onEdit={() => setDialog("edit")}
         onSettings={() => setDialog("chat")}
         onAvatarClick={() => setDialog("avatar")}
+        onBannerClick={() => setDialog("banner")}
       />
 
       <Tabs tabs={TABS} value={tab} onChange={setTab} idPrefix="profile" />
@@ -101,6 +103,21 @@ export default function ProfileClient() {
               displayName: profile.identity.displayName,
               username: profile.identity.username,
               avatarUrl,
+              bannerUrl: profile.identity.bannerUrl ?? null,
+            });
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog === "banner" && (
+        <BannerUploadDialog
+          currentBannerUrl={profile.identity.bannerUrl ?? null}
+          onSaved={(bannerUrl) => {
+            profile.applyIdentity({
+              displayName: profile.identity.displayName,
+              username: profile.identity.username,
+              avatarUrl: profile.identity.avatarUrl ?? null,
+              bannerUrl,
             });
           }}
           onClose={() => setDialog(null)}
@@ -109,6 +126,7 @@ export default function ProfileClient() {
     </div>
   );
 }
+
 
 
 

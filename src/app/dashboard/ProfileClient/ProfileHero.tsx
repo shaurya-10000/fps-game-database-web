@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, Copy, Crown, Pencil, Settings, Trophy } from "lucide-react";
+import { Camera, Check, Copy, Crown, Pencil, Settings, Trophy, Image as ImageIcon } from "lucide-react";
 import type { ProgressionSnapshot } from "@/lib/api-types";
 import LevelRing from "./LevelRing";
 import { formatDate, formatNumber, getInitials, shortId } from "./format";
@@ -15,12 +15,13 @@ interface ProfileHeroProps {
   onEdit: () => void;
   onSettings: () => void;
   onAvatarClick?: () => void;
+  onBannerClick?: () => void;
 }
 
 const GRID =
   "[background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:linear-gradient(to_bottom,black,transparent)]";
 
-export default function ProfileHero({ identity, progression, overview, onEdit, onSettings, onAvatarClick }: ProfileHeroProps) {
+export default function ProfileHero({ identity, progression, overview, onEdit, onSettings, onAvatarClick, onBannerClick }: ProfileHeroProps) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,7 +49,14 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
 
   return (
     <section className="relative overflow-hidden rounded-3xl border border-border bg-surface">
-      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-36 sm:h-44" style={{ backgroundImage: bannerColor }} />
+      {identity.bannerUrl ? (
+        <div
+          className="absolute inset-x-0 top-0 h-36 sm:h-44 bg-cover bg-center"
+          style={{ backgroundImage: `url(${identity.bannerUrl})` }}
+        />
+      ) : (
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-36 sm:h-44" style={{ backgroundImage: bannerColor }} />
+      )}
       <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-36 opacity-40 sm:h-44 ${GRID}`} />
 
       <div className="relative flex flex-col gap-6 px-5 pb-6 pt-16 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pt-24">
@@ -138,6 +146,15 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
           >
             <Pencil size={14} /> Edit profile
           </button>
+          {onBannerClick && (
+            <button
+              type="button"
+              onClick={onBannerClick}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-[13px] font-semibold text-foreground shadow-sm transition-opacity hover:opacity-90"
+            >
+              <ImageIcon size={14} /> Edit banner
+            </button>
+          )}
           <button
             type="button"
             onClick={onSettings}
@@ -150,6 +167,8 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
     </section>
   );
 }
+
+
 
 
 

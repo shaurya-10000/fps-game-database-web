@@ -3,6 +3,7 @@ export interface ProfileIdentity {
   displayName: string;
   username: string;
   avatarUrl?: string | null;
+  bannerUrl?: string | null;
 }
 
 export interface TierInfo {
@@ -44,3 +45,4 @@ export interface Overview {
   ratingHistory: { rating: number; at: string }[];
   recentMatches: RecentMatch[];
 }
+

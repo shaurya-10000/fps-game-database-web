@@ -11,6 +11,7 @@ interface ProfileResponse {
   displayName?: string;
   username?: string;
   avatarUrl?: string | null;
+  bannerUrl?: string | null;
 }
 
 export interface ProfileState {
@@ -22,7 +23,7 @@ export interface ProfileState {
   overview: Overview | null;
   friendsCount: number;
   reload: () => void;
-  applyIdentity: (next: { displayName: string; username: string; avatarUrl?: string | null }) => void;
+  applyIdentity: (next: { displayName: string; username: string; avatarUrl?: string | null; bannerUrl?: string | null }) => void;
 }
 
 function subscribeToAuth(onChange: () => void): () => void {
@@ -58,6 +59,7 @@ export function useProfile(): ProfileState {
       displayName: remoteIdentity.displayName || tokenName,
       username: remoteIdentity.username || tokenName,
       avatarUrl: remoteIdentity.avatarUrl ?? null,
+      bannerUrl: remoteIdentity.bannerUrl ?? null,
     }),
     [remoteIdentity, tokenName],
   );
@@ -79,6 +81,7 @@ export function useProfile(): ProfileState {
           displayName: profile.displayName || prev.displayName,
           username: profile.username || prev.username,
           avatarUrl: profile.avatarUrl ?? prev.avatarUrl ?? null,
+          bannerUrl: profile.bannerUrl ?? prev.bannerUrl ?? null,
         }));
       }
       setProgression(level);
@@ -98,10 +101,11 @@ export function useProfile(): ProfileState {
     setReloadKey((k) => k + 1);
   }, []);
 
-  const applyIdentity = useCallback((next: { displayName: string; username: string; avatarUrl?: string | null }) => {
+  const applyIdentity = useCallback((next: { displayName: string; username: string; avatarUrl?: string | null; bannerUrl?: string | null }) => {
     setRemoteIdentity((prev) => ({ ...prev, ...next }));
   }, []);
 
   return { loading, failed, identity, progression, overview, friendsCount, reload, applyIdentity };
 }
+
 
