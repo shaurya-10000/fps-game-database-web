@@ -4,8 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AlertCircle, BarChart3, LayoutDashboard, Settings } from "lucide-react";
 import ChatSettingsDialog from "@/app/dashboard/dms/DmsClient/dialogs/ChatSettingsDialog";
-import AvatarUploadDialog from "./AvatarUploadDialog";
-import BannerUploadDialog from "./BannerUploadDialog";
+import EditProfileMediaDialog from "./EditProfileMediaDialog";
 import EditProfileDialog from "./EditProfileDialog";
 import OverviewTab from "./OverviewTab";
 import ProfileHero from "./ProfileHero";
@@ -27,7 +26,7 @@ export default function ProfileClient() {
   const profile = useProfile();
   const reduceMotion = useReducedMotion();
   const [tab, setTab] = useState<TabId>("overview");
-  const [dialog, setDialog] = useState<"edit" | "chat" | "avatar" | "banner" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "chat" | "media" | null>(null);
 
   if (profile.loading) return <ProfileSkeleton />;
 
@@ -59,9 +58,8 @@ export default function ProfileClient() {
         progression={profile.progression}
         overview={profile.overview}
         onEdit={() => setDialog("edit")}
-        onSettings={() => setDialog("chat")}
-        onAvatarClick={() => setDialog("avatar")}
-        onBannerClick={() => setDialog("banner")}
+        onAvatarClick={() => setDialog("media")}
+        onBannerClick={() => setDialog("media")}
       />
 
       <Tabs tabs={TABS} value={tab} onChange={setTab} idPrefix="profile" />
@@ -95,29 +93,16 @@ export default function ProfileClient() {
         />
       )}
       {dialog === "chat" && <ChatSettingsDialog onClose={() => setDialog(null)} />}
-      {dialog === "avatar" && (
-        <AvatarUploadDialog
+      {dialog === "media" && (
+        <EditProfileMediaDialog
           currentAvatarUrl={profile.identity.avatarUrl ?? null}
-          onSaved={(avatarUrl) => {
-            profile.applyIdentity({
-              displayName: profile.identity.displayName,
-              username: profile.identity.username,
-              avatarUrl,
-              bannerUrl: profile.identity.bannerUrl ?? null,
-            });
-          }}
-          onClose={() => setDialog(null)}
-        />
-      )}
-      {dialog === "banner" && (
-        <BannerUploadDialog
           currentBannerUrl={profile.identity.bannerUrl ?? null}
-          onSaved={(bannerUrl) => {
+          onSaved={(data) => {
             profile.applyIdentity({
               displayName: profile.identity.displayName,
               username: profile.identity.username,
-              avatarUrl: profile.identity.avatarUrl ?? null,
-              bannerUrl,
+              avatarUrl: data.avatarUrl,
+              bannerUrl: data.bannerUrl,
             });
           }}
           onClose={() => setDialog(null)}
@@ -126,6 +111,8 @@ export default function ProfileClient() {
     </div>
   );
 }
+
+
 
 
 

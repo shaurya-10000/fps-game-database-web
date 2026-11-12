@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, Copy, Crown, Pencil, Settings, Trophy, Image as ImageIcon } from "lucide-react";
+import { Camera, Check, Copy, Crown, Pencil, Trophy, Image as ImageIcon } from "lucide-react";
 import type { ProgressionSnapshot } from "@/lib/api-types";
 import LevelRing from "./LevelRing";
 import { formatDate, formatNumber, getInitials, shortId } from "./format";
@@ -13,15 +13,11 @@ interface ProfileHeroProps {
   progression: ProgressionSnapshot | null;
   overview: Overview | null;
   onEdit: () => void;
-  onSettings: () => void;
   onAvatarClick?: () => void;
   onBannerClick?: () => void;
 }
 
-const GRID =
-  "[background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:linear-gradient(to_bottom,black,transparent)]";
-
-export default function ProfileHero({ identity, progression, overview, onEdit, onSettings, onAvatarClick, onBannerClick }: ProfileHeroProps) {
+export default function ProfileHero({ identity, progression, overview, onEdit, onAvatarClick, onBannerClick }: ProfileHeroProps) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -45,21 +41,35 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
 
   const tier = overview?.tier ?? null;
   const tierDef = findTier(tier?.tier);
-  const bannerColor = tierDef ? `linear-gradient(120deg, ${tierDef.from}55, ${tierDef.to}22 60%, transparent)` : "linear-gradient(120deg, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%)";
+  const fallbackGradient = tierDef 
+    ? `linear-gradient(120deg, ${tierDef.from}55, ${tierDef.to}22 60%, transparent)` 
+    : "linear-gradient(120deg, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%)";
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-border bg-surface">
-      {identity.bannerUrl ? (
-        <div
-          className="absolute inset-x-0 top-0 h-36 sm:h-44 bg-cover bg-center"
-          style={{ backgroundImage: `url(${identity.bannerUrl})` }}
-        />
-      ) : (
-        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-36 sm:h-44" style={{ backgroundImage: bannerColor }} />
-      )}
-      <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-36 opacity-40 sm:h-44 ${GRID}`} />
+    <section className="relative overflow-hidden rounded-3xl border border-border">
+      {/* Full Background (Image or Gradient) */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center transition-all duration-300 group/banner"
+        style={{ backgroundImage: identity.bannerUrl ? `url(${identity.bannerUrl})` : fallbackGradient }}
+      >
+        {/* Gradient Overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        
+        {/* Edit Banner Button (Hover on desktop, always visible on mobile) */}
+        {onBannerClick && (
+          <button
+            type="button"
+            onClick={onBannerClick}
+            className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-[12px] font-medium text-white backdrop-blur-md transition-all hover:bg-black/60 md:opacity-0 md:group-hover/banner:opacity-100"
+            aria-label="Change banner"
+          >
+            <ImageIcon size={14} />
+            Edit Banner
+          </button>
+        )}
+      </div>
 
-      <div className="relative flex flex-col gap-6 px-5 pb-6 pt-16 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pt-24">
+      <div className="relative flex flex-col gap-6 px-5 pb-6 pt-32 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pt-40">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
           <button
             type="button"
@@ -69,8 +79,8 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
           >
             <LevelRing size={124} percent={progression?.progressPercent ?? 0}>
               {identity.avatarUrl ? (
-                              <img
-                src={identity.avatarUrl}
+                <img
+                  src={identity.avatarUrl}
                   alt={identity.displayName}
                   className="size-[104px] rounded-full object-cover shadow-xl"
                 />
@@ -146,30 +156,10 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
           >
             <Pencil size={14} /> Edit profile
           </button>
-          {onBannerClick && (
-            <button
-              type="button"
-              onClick={onBannerClick}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-[13px] font-semibold text-foreground shadow-sm transition-opacity hover:opacity-90"
-            >
-              <ImageIcon size={14} /> Edit banner
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onSettings}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-foreground/5"
-          >
-            <Settings size={14} /> Chat settings
-          </button>
         </div>
       </div>
     </section>
   );
 }
-
-
-
-
 
 
