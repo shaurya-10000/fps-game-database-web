@@ -146,10 +146,58 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     live.on("presence", onPresence);
     live.on("disconnect", onDisconnect);
 
+    // ── Write real notifications to localStorage ──────────────────────────
+    const pushToStorage = (entry: {
+      kind: "message" | "call" | "friend-request" | "system";
+      title: string;
+      description: string;
+      meta?: Record<string, string>;
+    }) => {
+      try {
+        const STORAGE_KEY = "fps.notifications";
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        const arr = Array.isArray(list) ? list : [];
+        const next = [
+          {
+            id: `n_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+            ...entry,
+            createdAt: Date.now(),
+            read: false,
+          },
+          ...arr,
+        ].slice(0, 50);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        // Notify same-tab listeners
+        window.dispatchEvent(new Event("fps-notifications-changed"));
+      } catch { /* ignore storage errors */ }
+    };
+
+    const onChatActivity = (activity: { senderName: string; preview: string; kind: "dm" | "group" }) => {
+      pushToStorage({
+        kind: "message",
+        title: activity.senderName || "New message",
+        description: activity.preview || "Sent you a message",
+      });
+    };
+
+    const onIncomingCall = (payload: { fromPlayerId: string; offer?: { meta?: { fromName?: string } } }) => {
+      pushToStorage({
+        kind: "call",
+        title: "Incoming call",
+        description: `${payload.offer?.meta?.fromName ?? "Someone"} is calling you.`,
+      });
+    };
+
+    live.on("chat_activity", onChatActivity);
+    live.on("incoming_call", onIncomingCall);
+
     return () => {
       live.off("presence_snapshot", onSnapshot);
       live.off("presence", onPresence);
       live.off("disconnect", onDisconnect);
+      live.off("chat_activity", onChatActivity);
+      live.off("incoming_call", onIncomingCall);
       manager.dispose();
       managerRef.current = null;
       setSocket(null);

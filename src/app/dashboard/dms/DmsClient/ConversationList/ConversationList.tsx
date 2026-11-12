@@ -184,10 +184,12 @@ export default function ConversationList({
     
     updateCount();
     window.addEventListener("storage", updateCount);
+    window.addEventListener("fps-notifications-changed", updateCount);
     const interval = setInterval(updateCount, 2000);
     
     return () => {
       window.removeEventListener("storage", updateCount);
+      window.removeEventListener("fps-notifications-changed", updateCount);
       clearInterval(interval);
     };
   }, [notificationsOpen]);
@@ -442,6 +444,7 @@ export default function ConversationList({
     </aside>
   );
 }
+
 
 
 

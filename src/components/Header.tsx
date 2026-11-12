@@ -235,11 +235,13 @@ export default function Header() {
     updateCount(); // Initial check
     // Listen for changes from other tabs or the dashboard
     window.addEventListener("storage", updateCount);
+    window.addEventListener("fps-notifications-changed", updateCount);
     // Poll every 2 seconds as a fallback for same-tab updates (since storage events don't fire same-tab)
     const interval = setInterval(updateCount, 2000);
     
     return () => {
       window.removeEventListener("storage", updateCount);
+      window.removeEventListener("fps-notifications-changed", updateCount);
       clearInterval(interval);
     };
   }, [notificationsOpen]); // Re-check when panel opens/closes
@@ -436,6 +438,7 @@ export default function Header() {
     </>
   );
 }
+
 
 
 
