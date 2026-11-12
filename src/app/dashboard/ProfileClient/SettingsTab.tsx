@@ -18,7 +18,7 @@ interface SettingsTabProps {
 function Row({ icon: Icon, label, value, action }: { icon: typeof UserRound; label: string; value: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 py-3">
-      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.05] text-muted">
+      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/5 text-muted">
         <Icon size={16} />
       </span>
       <div className="min-w-0 flex-1">
@@ -76,7 +76,7 @@ export default function SettingsTab({ identity, onEdit, onChatSettings }: Settin
           </div>
           <div className="flex items-center gap-4 py-3">
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.05] text-muted">
+              <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/5 text-muted">
                 <Bell size={16} />
               </span>
               <div className="min-w-0">
