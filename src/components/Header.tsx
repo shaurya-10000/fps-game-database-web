@@ -21,8 +21,6 @@ type NavigationLabel = (typeof NAVIGATION)[number]["label"];
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-
-
 function DiamondMark() {
   return (
     <span
@@ -438,25 +436,3 @@ export default function Header() {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
