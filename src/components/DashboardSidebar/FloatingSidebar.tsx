@@ -120,11 +120,11 @@ export default function FloatingSidebar<T extends string>({
         aria-label={ariaLabel}
         aria-hidden={!isOpen}
         className={cn(
-          "fixed bottom-3 left-3 top-3 z-[70] flex w-72 max-w-[calc(100vw-1.5rem)] flex-col rounded-[2rem] border p-5",
+          "fixed inset-y-0 left-0 z-[70] flex w-72 max-w-[80vw] flex-col border-r p-5 sm:bottom-3 sm:left-3 sm:top-3 sm:max-w-[calc(100vw-1.5rem)] sm:rounded-[2rem] sm:border",
           "border-zinc-200 bg-zinc-50 shadow-2xl shadow-black/10",
           "dark:border-white/[0.04] dark:bg-[#0a0a0a] dark:shadow-black/80",
           "transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          isOpen ? "translate-x-0" : "-translate-x-[calc(100%+1rem)]"
+          isOpen ? "translate-x-0" : "-translate-x-full sm:-translate-x-[calc(100%+1rem)]"
         )}
         tabIndex={isOpen ? undefined : -1}
       >
@@ -218,6 +218,7 @@ export default function FloatingSidebar<T extends string>({
     </>
   );
 }
+
 
 
 

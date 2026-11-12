@@ -10,7 +10,6 @@ interface TabDef {
   label: string;
   icon: LucideIcon;
   count?: number;
-  /** Highlight the count (something needs attention). */
   alert?: boolean;
 }
 
@@ -24,6 +23,7 @@ interface FriendsTabsProps {
 
 export default function FriendsTabs({ value, onChange, friendsCount, requestsCount, blockedCount }: FriendsTabsProps) {
   const refs = useRef(new Map<string, HTMLButtonElement>());
+  
   const tabs: TabDef[] = [
     { id: "friends", label: "Friends", icon: Users, count: friendsCount },
     { id: "requests", label: "Requests", icon: Inbox, count: requestsCount, alert: requestsCount > 0 },
@@ -44,7 +44,7 @@ export default function FriendsTabs({ value, onChange, friendsCount, requestsCou
   };
 
   return (
-    <div role="tablist" aria-label="Friends sections" className="flex gap-1 overflow-x-auto border-b border-border">
+    <div role="tablist" aria-label="Friends sections" className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-surface/30 p-1.5 sm:flex sm:gap-1">
       {tabs.map((tab, index) => {
         const active = tab.id === value;
         return (
@@ -62,23 +62,25 @@ export default function FriendsTabs({ value, onChange, friendsCount, requestsCou
             onClick={() => onChange(tab.id)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={cn(
-              "relative flex shrink-0 items-center gap-2 px-4 py-3 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
-              active ? "text-foreground" : "text-muted hover:text-foreground",
+              "relative flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+              active 
+                ? "bg-background text-foreground shadow-sm ring-1 ring-border" 
+                : "text-muted hover:bg-foreground/5 hover:text-foreground"
             )}
           >
-            <tab.icon size={15} />
+            <tab.icon size={15} className={active ? "text-foreground" : "text-muted"} />
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
               <span
                 className={cn(
-                  "min-w-5 rounded-full px-1.5 text-center font-mono text-[11px] font-bold leading-5",
-                  tab.alert ? "bg-accent text-background" : "bg-foreground/10 text-muted",
+                  "flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold",
+                  tab.alert ? "bg-rose-500 text-white" : "bg-foreground/10 text-muted"
                 )}
               >
-                {tab.count}
+                {tab.count > 99 ? "99+" : tab.count}
               </span>
             )}
-            {active && <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-accent" />}
           </button>
         );
       })}
