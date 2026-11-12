@@ -76,7 +76,7 @@ export default function FriendsClient() {
       : `${data.friends.length} friend${data.friends.length === 1 ? "" : "s"} - ${onlineCount} online`;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto w-full max-w-5xl space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Social</div>
@@ -92,7 +92,7 @@ export default function FriendsClient() {
             <UserPlus size={15} /> Add friend
           </button>
         )}
-      </header>
+        </header>
 
       {data.error && (
         <div
@@ -121,7 +121,7 @@ export default function FriendsClient() {
         blockedCount={data.blocked.length}
       />
 
-      <div role="tabpanel" id={`friends-panel-${tab}`} aria-labelledby={`friends-tab-${tab}`}>
+      <div role="tabpanel" id={`friends-panel-${tab}`} aria-labelledby={`friends-tab-${tab}`} className="min-h-[400px] w-full rounded-2xl border border-border bg-surface/30 p-6 sm:p-8">
         {tab === "friends" && (
           <FriendsList
             friends={data.friends}
@@ -214,3 +214,8 @@ export default function FriendsClient() {
     </div>
   );
 }
+
+
+
+
+

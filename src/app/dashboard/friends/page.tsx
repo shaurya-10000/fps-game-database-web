@@ -1,5 +1,5 @@
 import DashboardShell from "../DashboardShell";
-import FriendsClient from "./FriendsClient";
+import FriendsClient from "./FriendsClient/FriendsClient";
 
 export default function FriendsPage() {
   return (
