@@ -93,10 +93,7 @@ function ChatRow({ entry, active, opening, pinned, unread, online, muted, archiv
         {unread > 0 && (
           <span
             aria-label={`${unread} unread`}
-            className={cn(
-              "min-w-5 shrink-0 rounded-full px-1.5 text-center text-[11px] font-bold leading-5",
-              muted ? "bg-foreground/20 text-foreground" : "bg-accent text-background",
-            )}
+            className="flex size-5 shrink-0 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-background"
           >
             {unread > 99 ? "99+" : unread}
           </span>
@@ -444,6 +441,7 @@ export default function ConversationList({
     </aside>
   );
 }
+
 
 
 
