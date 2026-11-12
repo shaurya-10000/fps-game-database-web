@@ -115,7 +115,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               {isOpen ? <PanelLeftClose size={20} strokeWidth={1.5} /> : <PanelLeftOpen size={20} strokeWidth={1.5} />}
             </button>
             <div className="flex items-center gap-2.5">
-              <Crown size={16} className="text-amber-500" fill="currentColor" />
+              {(() => {
+                const ActiveIcon = NAV_ITEMS.find((item) => item.id === activeId)?.icon ?? LayoutDashboard;
+                return <ActiveIcon size={16} className="text-amber-500" />;
+              })()}
               <span className="font-heading text-[13px] font-bold uppercase tracking-widest text-foreground">
                 {NAV_ITEMS.find((item) => item.id === activeId)?.label ?? "Dashboard"}
               </span>
@@ -176,5 +179,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
+
+
 
 
