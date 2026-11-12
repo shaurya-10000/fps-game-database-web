@@ -142,11 +142,21 @@ export function useNotifications(socket: Socket | null = null) {
     setNotifications([]);
   }, []);
 
-  // Navigation helper — uses window.location for reliability across contexts
+  // Navigation helper — routes to the chat or friends page
   const navigateTo = useCallback((n: AppNotification) => {
     markRead(n.id);
-    if (n.kind === "message" && n.meta?.senderId) {
-      router.push(`/dashboard/dms?dm=${encodeURIComponent(n.meta.senderId)}`);
+    if (n.kind === "message" || n.kind === "call") {
+      // Try all possible field names for the target
+      const target =
+        n.meta?.senderId ||
+        n.meta?.playerId ||
+        (n.meta as { fromPlayerId?: string })?.fromPlayerId;
+      if (target) {
+        router.push(`/dashboard/dms?dm=${encodeURIComponent(target)}`);
+      } else {
+        // Fallback: go to the DMs page (which shows the list)
+        router.push("/dashboard/dms");
+      }
     } else if (n.kind === "friend-request") {
       router.push("/dashboard/friends");
     }
@@ -183,12 +193,14 @@ export function useNotifications(socket: Socket | null = null) {
   // Socket events
   useEffect(() => {
     if (!socket) return;
-    const onChatActivity = (a: { roomId: string; senderId: string; senderName: string; preview: string }) => {
+    const onChatActivity = (a: { roomId?: string; senderId?: string; fromPlayerId?: string; senderName?: string; preview?: string }) => {
+      // The backend may use different field names; take whichever is present
+      const targetId = a.senderId || a.fromPlayerId || "";
       push({
         kind: "message",
         title: a.senderName || "New message",
         description: a.preview || "Sent you a message",
-        meta: { roomId: a.roomId, senderId: a.senderId },
+        meta: { roomId: a.roomId, senderId: targetId },
       });
     };
     const onIncomingCall = (p: { fromPlayerId: string; offer?: { meta?: { fromName?: string } } }) => {
@@ -217,5 +229,6 @@ export function useNotifications(socket: Socket | null = null) {
 
   return { notifications, unreadCount, markRead, markAllRead, clearAll, navigateTo, push };
 }
+
 
 

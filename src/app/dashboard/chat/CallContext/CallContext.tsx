@@ -173,11 +173,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       } catch { /* ignore storage errors */ }
     };
 
-    const onChatActivity = (activity: { senderName: string; preview: string; kind: "dm" | "group" }) => {
+    const onChatActivity = (activity: { roomId?: string; senderId?: string; fromPlayerId?: string; senderName?: string; preview?: string; kind?: "dm" | "group" }) => {
       pushToStorage({
         kind: "message",
         title: activity.senderName || "New message",
         description: activity.preview || "Sent you a message",
+        meta: { 
+          roomId: activity.roomId ?? "", 
+          senderId: activity.senderId ?? activity.fromPlayerId ?? "" 
+        },
       });
     };
 
@@ -280,4 +284,6 @@ export function useCall(): CallContextType {
   if (!ctx) throw new Error("useCall must be used within CallProvider");
   return ctx;
 }
+
+
 
