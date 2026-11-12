@@ -34,6 +34,7 @@ export interface DmFriend {
   rowId: string;
   playerId: string;
   name: string;
+  avatarUrl?: string | null;
 }
 
 export interface GroupMember {

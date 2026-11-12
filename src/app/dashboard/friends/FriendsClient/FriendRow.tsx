@@ -62,7 +62,7 @@ export default function FriendRow({
         className="flex min-w-0 flex-1 items-center gap-3 rounded-xl py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
       >
         <span className="relative shrink-0">
-          <ChatAvatar name={friend.name} size={44} />
+          <ChatAvatar name={friend.name} size={44} avatarUrl={friend.avatarUrl} />
           {online && (
             <span aria-label="Online" className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-surface bg-emerald-500" />
           )}

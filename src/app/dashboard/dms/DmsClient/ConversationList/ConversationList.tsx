@@ -77,7 +77,7 @@ function ChatRow({ entry, active, opening, pinned, unread, online, muted, archiv
       >
         {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-accent" />}
         <span className="relative shrink-0">
-          {entry.kind === "dm" ? <ChatAvatar name={name} size={40} /> : <GroupAvatar name={name} size={40} />}
+          {entry.kind === "dm" ? <ChatAvatar name={name} size={40} avatarUrl={entry.friend.avatarUrl} /> : <GroupAvatar name={name} size={40} />}
           {online && (
             <span
               aria-label="Online"
@@ -428,6 +428,7 @@ export default function ConversationList({
     </aside>
   );
 }
+
 
 
 

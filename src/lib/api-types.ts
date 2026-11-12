@@ -21,6 +21,7 @@ export interface FriendSummary {
   playerId: string;
   displayName: string;
   since?: string;
+  avatarUrl?: string | null;
 }
 
 export interface ProgressionSnapshot {

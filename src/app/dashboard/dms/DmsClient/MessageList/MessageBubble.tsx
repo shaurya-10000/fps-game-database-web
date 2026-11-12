@@ -118,7 +118,7 @@ export default function MessageBubble({
     setSwipe(0);
   };
 
-  const avatar = <ChatAvatar name={senderName} size={32} />;
+  const avatar = <ChatAvatar name={senderName} size={32} avatarUrl={msg.senderAvatarUrl} />;
 
   const actions = sent ? (
     <MessageActions

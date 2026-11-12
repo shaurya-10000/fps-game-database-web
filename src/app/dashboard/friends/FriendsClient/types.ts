@@ -4,6 +4,7 @@ export interface Friend {
   name: string;
   /** When you became friends. */
   since: string;
+  avatarUrl?: string | null;
 }
 
 export interface RequestRow {

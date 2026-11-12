@@ -5,16 +5,18 @@ interface PersonRowProps {
   name: string;
   subtitle?: React.ReactNode;
   online?: boolean;
+  /** Optional avatar URL. Falls back to initials when absent. */
+  avatarUrl?: string | null;
   /** Buttons on the right. */
   children?: React.ReactNode;
 }
 
 /** A person with an avatar, name, optional status line and actions. Used by requests, search results and blocks. */
-export default function PersonRow({ name, subtitle, online = false, children }: PersonRowProps) {
+export default function PersonRow({ name, subtitle, online = false, avatarUrl, children }: PersonRowProps) {
   return (
     <li className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3 py-3 sm:px-4">
       <span className="relative shrink-0">
-        <ChatAvatar name={name} size={44} />
+        <ChatAvatar name={name} size={44} avatarUrl={avatarUrl} />
         {online && (
           <span aria-label="Online" className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-surface bg-emerald-500" />
         )}

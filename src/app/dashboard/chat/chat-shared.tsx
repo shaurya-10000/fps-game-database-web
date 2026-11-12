@@ -8,6 +8,7 @@ export interface ChatMessage {
   roomId: string;
   senderId: string;
   senderName?: string;
+  senderAvatarUrl?: string | null;
   content: string;
   createdAt: string;
   audioUrl?: string;
@@ -87,6 +88,7 @@ export function ChatAvatar({
     </div>
   );
 }
+
 
 
 
