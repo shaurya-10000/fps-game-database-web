@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu as MenuIcon, X as CloseIcon, Home, ArrowLeft } from "lucide-react";
+import { Menu as MenuIcon, X as CloseIcon, Home, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -268,10 +268,26 @@ export default function Header() {
             <PillLink href="/rankings" active={rankingsActive}>
               Rankings
             </PillLink>
-            <PillLink href="/dashboard" active={dashboardActive}>
-              Dashboard
-            </PillLink>
+            <Link 
+              href="/dashboard" 
+              aria-label="Dashboard" 
+              title="Dashboard"
+              className={`flex size-8 items-center justify-center rounded-md transition-colors ${
+                dashboardActive ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:text-foreground"
+              }`}
+            >
+              <LayoutDashboard size={16} />
+            </Link>
           </motion.div>
+          <Link
+            href="/dashboard"
+            aria-label="Dashboard"
+            title="Dashboard"
+            className="mr-1 flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground md:hidden"
+          >
+            <LayoutDashboard size={16} />
+          </Link>
+          
           <SettingsMenu />
           <button
             type="button"
@@ -367,6 +383,8 @@ export default function Header() {
     </header>
   );
 }
+
+
 
 
 

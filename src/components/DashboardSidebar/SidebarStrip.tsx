@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut, PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import { LogOut, PanelLeftOpen, PanelLeftClose, Home } from "lucide-react";
+import Link from "next/link";
 
 interface SidebarStripProps {
   onOpenMenu: () => void;
@@ -12,6 +13,7 @@ interface SidebarStripProps {
 export default function SidebarStrip({ onOpenMenu, onSignOut, triggerRef, isOpen }: SidebarStripProps) {
   return (
     <aside className="relative z-40 flex w-16 shrink-0 flex-col items-center border-r border-border bg-background py-4 dark:border-white/[0.04] dark:bg-[#0a0a0a]">
+      
       {/* Toggle menu (top) */}
       <button
         ref={triggerRef}
@@ -22,6 +24,16 @@ export default function SidebarStrip({ onOpenMenu, onSignOut, triggerRef, isOpen
       >
         {isOpen ? <PanelLeftClose size={20} strokeWidth={1.5} /> : <PanelLeftOpen size={20} strokeWidth={1.5} />}
       </button>
+
+      {/* Back to Home */}
+      <Link
+        href="/"
+        aria-label="Back to main page"
+        title="Back to main page"
+        className="mt-2 flex size-10 items-center justify-center rounded-xl text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+      >
+        <Home size={20} strokeWidth={1.5} />
+      </Link>
 
       {/* Spacer to push sign-out to the bottom */}
       <div className="flex-1" />
@@ -35,6 +47,7 @@ export default function SidebarStrip({ onOpenMenu, onSignOut, triggerRef, isOpen
       >
         <LogOut size={20} />
       </button>
+      
     </aside>
   );
 }
