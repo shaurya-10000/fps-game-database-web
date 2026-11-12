@@ -10,6 +10,7 @@ interface ProfileResponse {
   playerId?: string;
   displayName?: string;
   username?: string;
+  avatarUrl?: string | null;
 }
 
 export interface ProfileState {
@@ -21,7 +22,7 @@ export interface ProfileState {
   overview: Overview | null;
   friendsCount: number;
   reload: () => void;
-  applyIdentity: (next: { displayName: string; username: string }) => void;
+  applyIdentity: (next: { displayName: string; username: string; avatarUrl?: string | null }) => void;
 }
 
 function subscribeToAuth(onChange: () => void): () => void {
@@ -37,7 +38,7 @@ function readTokenName(): string {
 
 const readServerTokenName = (): string => "";
 
-const EMPTY_IDENTITY: ProfileIdentity = { playerId: "", displayName: "", username: "" };
+const EMPTY_IDENTITY: ProfileIdentity = { playerId: "", displayName: "", username: "", avatarUrl: null };
 
 export function useProfile(): ProfileState {
   const [reloadKey, setReloadKey] = useState(0);
@@ -56,6 +57,7 @@ export function useProfile(): ProfileState {
       playerId: remoteIdentity.playerId,
       displayName: remoteIdentity.displayName || tokenName,
       username: remoteIdentity.username || tokenName,
+      avatarUrl: remoteIdentity.avatarUrl ?? null,
     }),
     [remoteIdentity, tokenName],
   );
@@ -76,6 +78,7 @@ export function useProfile(): ProfileState {
           playerId: profile.playerId ?? prev.playerId,
           displayName: profile.displayName || prev.displayName,
           username: profile.username || prev.username,
+          avatarUrl: profile.avatarUrl ?? prev.avatarUrl ?? null,
         }));
       }
       setProgression(level);
@@ -95,9 +98,10 @@ export function useProfile(): ProfileState {
     setReloadKey((k) => k + 1);
   }, []);
 
-  const applyIdentity = useCallback((next: { displayName: string; username: string }) => {
+  const applyIdentity = useCallback((next: { displayName: string; username: string; avatarUrl?: string | null }) => {
     setRemoteIdentity((prev) => ({ ...prev, ...next }));
   }, []);
 
   return { loading, failed, identity, progression, overview, friendsCount, reload, applyIdentity };
 }
+

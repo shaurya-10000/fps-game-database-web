@@ -48,11 +48,23 @@ export function ChatAvatar({
   name,
   size = 32,
   isMe = false,
+  avatarUrl,
 }: {
   name: string;
   size?: number;
   isMe?: boolean;
+  avatarUrl?: string | null;
 }) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   const initials = name.slice(0, 2).toUpperCase();
   const colors = [
     "bg-rose-500/20 text-rose-500",
@@ -75,3 +87,7 @@ export function ChatAvatar({
     </div>
   );
 }
+
+
+
+

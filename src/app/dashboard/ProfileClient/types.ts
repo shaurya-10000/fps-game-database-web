@@ -2,6 +2,7 @@ export interface ProfileIdentity {
   playerId: string;
   displayName: string;
   username: string;
+  avatarUrl?: string | null;
 }
 
 export interface TierInfo {

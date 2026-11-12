@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Crown, Pencil, Settings, Trophy } from "lucide-react";
+import { Camera, Check, Copy, Crown, Pencil, Settings, Trophy } from "lucide-react";
 import type { ProgressionSnapshot } from "@/lib/api-types";
 import LevelRing from "./LevelRing";
 import { formatDate, formatNumber, getInitials, shortId } from "./format";
@@ -14,12 +14,13 @@ interface ProfileHeroProps {
   overview: Overview | null;
   onEdit: () => void;
   onSettings: () => void;
+  onAvatarClick?: () => void;
 }
 
 const GRID =
   "[background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:linear-gradient(to_bottom,black,transparent)]";
 
-export default function ProfileHero({ identity, progression, overview, onEdit, onSettings }: ProfileHeroProps) {
+export default function ProfileHero({ identity, progression, overview, onEdit, onSettings, onAvatarClick }: ProfileHeroProps) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -52,21 +53,39 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
 
       <div className="relative flex flex-col gap-6 px-5 pb-6 pt-16 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pt-24">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
-          <div className="relative w-fit">
+          <button
+            type="button"
+            onClick={onAvatarClick}
+            aria-label="Change profile picture"
+            className="group relative w-fit cursor-pointer"
+          >
             <LevelRing size={124} percent={progression?.progressPercent ?? 0}>
-              <div
-                aria-hidden="true"
-                className="flex size-[104px] items-center justify-center rounded-full bg-background text-4xl font-bold tracking-tight text-accent shadow-xl"
-              >
-                {getInitials(identity.displayName)}
-              </div>
+              {identity.avatarUrl ? (
+                              <img
+                src={identity.avatarUrl}
+                  alt={identity.displayName}
+                  className="size-[104px] rounded-full object-cover shadow-xl"
+                />
+              ) : (
+                <div
+                  aria-hidden="true"
+                  className="flex size-[104px] items-center justify-center rounded-full bg-background text-4xl font-bold tracking-tight text-accent shadow-xl"
+                >
+                  {getInitials(identity.displayName)}
+                </div>
+              )}
             </LevelRing>
+            {onAvatarClick && (
+              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                <Camera size={24} className="text-white" />
+              </span>
+            )}
             {progression && (
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 font-mono text-[11px] font-bold text-background shadow-md ring-2 ring-surface">
                 LVL {progression.level}
               </span>
             )}
-          </div>
+          </button>
 
           <div className="min-w-0 pb-1">
             <h1 className="truncate text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{identity.displayName || "Player"}</h1>
@@ -131,3 +150,7 @@ export default function ProfileHero({ identity, progression, overview, onEdit, o
     </section>
   );
 }
+
+
+
+
