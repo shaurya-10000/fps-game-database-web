@@ -179,9 +179,9 @@ export default function FloatingSidebar<T extends string>({
                   <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-amber-500" />
                 )}
                 <Icon size={16} aria-hidden="true" className={isActive ? "text-amber-500" : ""} />
-                <span className="flex-1">{item.label}</span>
+                {item.label}
                 {badges?.[item.id] ? (
-                  <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                  <span className="ml-auto flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
                     {badges[item.id]! > 99 ? "99+" : badges[item.id]}
                   </span>
                 ) : null}
@@ -218,5 +218,6 @@ export default function FloatingSidebar<T extends string>({
     </>
   );
 }
+
 
 
