@@ -36,7 +36,7 @@ export default function RequestsPanel({ incoming, outgoing, onAccept, onDecline,
         ) : (
           <ul className="space-y-2">
             {incoming.map((request) => (
-              <PersonRow key={request.rowId} name={request.name} subtitle={request.at ? `Sent you a request ${timeAgo(request.at)}` : "Sent you a request"}>
+              <PersonRow key={request.rowId} name={request.name} avatarUrl={request.avatarUrl} subtitle={request.at ? `Sent you a request ${timeAgo(request.at)}` : "Sent you a request"}>
                 <button type="button" onClick={() => onAccept(request)} className={PRIMARY_BUTTON}>
                   Accept
                 </button>
@@ -60,7 +60,7 @@ export default function RequestsPanel({ incoming, outgoing, onAccept, onDecline,
         ) : (
           <ul className="space-y-2">
             {outgoing.map((request) => (
-              <PersonRow key={request.rowId} name={request.name} subtitle={request.at ? `Waiting since ${timeAgo(request.at)}` : "Waiting for a reply"}>
+              <PersonRow key={request.rowId} name={request.name} avatarUrl={request.avatarUrl} subtitle={request.at ? `Waiting since ${timeAgo(request.at)}` : "Waiting for a reply"}>
                 <button type="button" onClick={() => onCancel(request)} className={SECONDARY_BUTTON}>
                   Cancel
                 </button>

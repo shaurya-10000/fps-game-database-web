@@ -14,6 +14,7 @@ function toDmFriend(row: NamedFriendRow): DmFriend {
     rowId: row._id,
     playerId: row.toPlayerId,
     name: row.toPlayerName || row.toPlayerId.slice(0, 8),
+    avatarUrl: row.avatarUrl ?? null,
   };
 }
 

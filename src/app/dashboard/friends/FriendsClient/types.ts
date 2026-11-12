@@ -12,6 +12,7 @@ export interface RequestRow {
   playerId: string;
   name: string;
   at: string;
+  avatarUrl?: string | null;
 }
 
 export interface BlockedPlayer {
@@ -23,3 +24,4 @@ export interface BlockedPlayer {
 export type TabId = "friends" | "requests" | "add" | "blocked";
 
 export type Relation = "friend" | "incoming" | "outgoing" | "blocked" | "none";
+

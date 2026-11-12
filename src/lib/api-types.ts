@@ -15,6 +15,8 @@ export interface FriendshipRow {
   status: "pending" | "accepted";
   createdAt: string;
   acceptedAt?: string;
+  /** Avatar of the other player (backend enriches this). */
+  avatarUrl?: string | null;
 }
 
 export interface FriendSummary {
@@ -31,3 +33,4 @@ export interface ProgressionSnapshot {
   xpForNextLevel: number;
   progressPercent: number;
 }
+

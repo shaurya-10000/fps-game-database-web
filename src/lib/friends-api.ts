@@ -4,6 +4,7 @@ import type { FriendshipRow } from "./api-types";
 export interface SearchResult {
   _id: string;
   displayName: string;
+  avatarUrl?: string | null;
 }
 
 export async function searchPlayers(q: string): Promise<SearchResult[]> {

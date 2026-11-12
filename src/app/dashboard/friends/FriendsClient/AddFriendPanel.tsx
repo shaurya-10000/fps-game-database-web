@@ -79,7 +79,7 @@ export default function AddFriendPanel({
           {results.map((player) => {
             const relation = relationOf(player._id);
             return (
-              <PersonRow key={player._id} name={player.displayName}>
+              <PersonRow key={player._id} name={player.displayName} avatarUrl={player.avatarUrl}>
                 {relation === "friend" && (
                   <>
                     <span className="inline-flex items-center gap-1 px-2 text-[12px] font-medium text-emerald-500">

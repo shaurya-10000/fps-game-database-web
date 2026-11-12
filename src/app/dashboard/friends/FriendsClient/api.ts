@@ -20,6 +20,7 @@ export async function fetchFriends(): Promise<Friend[]> {
       playerId: row.toPlayerId,
       name: row.toPlayerName || fallbackName(row.toPlayerId),
       since: row.acceptedAt ?? row.createdAt ?? "",
+      avatarUrl: row.avatarUrl ?? null,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -31,6 +32,7 @@ export async function fetchIncoming(): Promise<RequestRow[]> {
     playerId: row.fromPlayerId,
     name: row.fromPlayerName || fallbackName(row.fromPlayerId),
     at: row.createdAt ?? "",
+    avatarUrl: row.avatarUrl ?? null,
   }));
 }
 
@@ -41,6 +43,7 @@ export async function fetchOutgoing(): Promise<RequestRow[]> {
     playerId: row.toPlayerId,
     name: row.toPlayerName || fallbackName(row.toPlayerId),
     at: row.createdAt ?? "",
+    avatarUrl: row.avatarUrl ?? null,
   }));
 }
 
