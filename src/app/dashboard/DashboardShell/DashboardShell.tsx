@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboard, Users, MessageSquare, Settings, Crown } from "lucide-react";
@@ -43,6 +43,30 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
+  // Read unread message count from localStorage
+  useEffect(() => {
+    const update = () => {
+      try {
+        const raw = localStorage.getItem("fps.notifications");
+        if (raw) {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            const count = list.filter((n: { kind: string; read: boolean }) => n.kind === "message" && !n.read).length;
+            setUnreadMessageCount(count);
+          }
+        }
+      } catch { /* ignore */ }
+    };
+    update();
+    window.addEventListener("fps-notifications-changed", update);
+    window.addEventListener("storage", update);
+    return () => {
+      window.removeEventListener("fps-notifications-changed", update);
+      window.removeEventListener("storage", update);
+    };
+  }, []);
 
   const fullBleed = FULL_BLEED_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
@@ -91,6 +115,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           onSelect={select}
           onClose={close}
           ariaLabel="Dashboard navigation"
+          badges={{ dms: unreadMessageCount }}
           sectionLabel="Menu"
           onSignOut={signOut}
           isSigningOut={isSigningOut}
@@ -125,6 +150,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
+
+
+
 
 
 

@@ -25,6 +25,7 @@ interface SidebarProps<T extends string> {
   onSignOut?: () => void;
   isSigningOut?: boolean;
   signOutError?: string | null;
+  badges?: Partial<Record<T, number>>;
 }
 
 export default function FloatingSidebar<T extends string>({
@@ -41,6 +42,7 @@ export default function FloatingSidebar<T extends string>({
   onSignOut,
   isSigningOut,
   signOutError,
+  badges,
 }: SidebarProps<T>) {
   const reduceMotion = useReducedMotion();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -177,7 +179,12 @@ export default function FloatingSidebar<T extends string>({
                   <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-amber-500" />
                 )}
                 <Icon size={16} aria-hidden="true" className={isActive ? "text-amber-500" : ""} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {badges?.[item.id] ? (
+                  <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                    {badges[item.id]! > 99 ? "99+" : badges[item.id]}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -211,4 +218,5 @@ export default function FloatingSidebar<T extends string>({
     </>
   );
 }
+
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import type { Socket } from "socket.io-client";
 import { api } from "@/lib/api";
 
@@ -98,6 +99,7 @@ function save(list: AppNotification[]) {
 // ─── Hook ─────────────────────────────────────────────────────────────
 export function useNotifications(socket: Socket | null = null) {
   const [notifications, setNotifications] = useState<AppNotification[]>(() => load());
+  const router = useRouter();
 
   useEffect(() => {
     const onChange = () => setNotifications(load());
@@ -144,11 +146,11 @@ export function useNotifications(socket: Socket | null = null) {
   const navigateTo = useCallback((n: AppNotification) => {
     markRead(n.id);
     if (n.kind === "message" && n.meta?.senderId) {
-      window.location.href = `/dashboard/dms?dm=${encodeURIComponent(n.meta.senderId)}`;
+      router.push(`/dashboard/dms?dm=${encodeURIComponent(n.meta.senderId)}`);
     } else if (n.kind === "friend-request") {
-      window.location.href = "/dashboard/friends";
+      router.push("/dashboard/friends");
     }
-  }, [markRead]);
+  }, [markRead, router]);
 
   // Friend request polling
   useEffect(() => {
@@ -215,3 +217,4 @@ export function useNotifications(socket: Socket | null = null) {
 
   return { notifications, unreadCount, markRead, markAllRead, clearAll, navigateTo, push };
 }
+
