@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, LoaderCircle, Trash2 } from "lucide-react";
+import { Camera, LoaderCircle, Trash2, UploadCloud } from "lucide-react";
 import Modal from "@/app/dashboard/dms/DmsClient/ui/Modal";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface EditProfileMediaDialogProps {
   currentAvatarUrl: string | null;
@@ -12,7 +13,10 @@ interface EditProfileMediaDialogProps {
   onClose: () => void;
 }
 
-async function compressImage(file: File, targetWidth: number, targetHeight: number): Promise<string> {
+const AVATAR_LIMIT = 140_000; // 140 KB (matches backend)
+const BANNER_LIMIT = 300_000; // 300 KB (matches backend)
+
+async function compressImage(file: File, targetWidth: number, targetHeight: number, maxBytes: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const reader = new FileReader();
@@ -36,7 +40,17 @@ async function compressImage(file: File, targetWidth: number, targetHeight: numb
         }
         
         ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
-        resolve(canvas.toDataURL("image/jpeg", 0.85));
+        
+        let quality = 0.85;
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+        
+        // Iteratively reduce quality if it exceeds the byte limit
+        while (dataUrl.length > maxBytes && quality > 0.3) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL("image/jpeg", quality);
+        }
+        
+        resolve(dataUrl);
       };
       img.onerror = () => reject(new Error("Could not load image"));
       img.src = reader.result as string;
@@ -46,54 +60,143 @@ async function compressImage(file: File, targetWidth: number, targetHeight: numb
   });
 }
 
+function formatBytes(bytes: number): string {
+  return (bytes / 1024).toFixed(1) + " KB";
+}
+
+interface DropZoneProps {
+  label: string;
+  hint: string;
+  preview: string | null;
+  onFile: (file: File) => void;
+  onRemove: () => void;
+  onPaste: (file: File) => void;
+  aspect: "square" | "banner";
+  limit: number;
+}
+
+function DropZone({ label, hint, preview, onFile, onRemove, onPaste, aspect, limit }: DropZoneProps) {
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    if (e.dataTransfer.files?.[0]) onFile(e.dataTransfer.files[0]);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const file = e.clipboardData.files?.[0];
+    if (file && file.type.startsWith("image/")) onPaste(file);
+  };
+
+  const isOverLimit = preview ? preview.length > limit : false;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-[13px] font-semibold text-foreground">{label}</label>
+        {preview && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="inline-flex items-center gap-1 text-[12px] font-medium text-rose-500 hover:underline"
+          >
+            <Trash2 size={12} /> Remove
+          </button>
+        )}
+      </div>
+
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        onPaste={handlePaste}
+        className={cn(
+          "group relative flex w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all",
+          aspect === "square" ? "aspect-square max-w-[200px]" : "aspect-[3/1] w-full",
+          dragging ? "border-accent bg-accent/5" : "border-border bg-surface hover:border-foreground/30 hover:bg-foreground/[0.02]",
+          preview ? "border-solid" : ""
+        )}
+      >
+        {preview ? (
+          <img src={preview} alt={`${label} preview`} className="size-full object-cover" />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-muted">
+            <UploadCloud size={24} />
+            <span className="text-[12px] font-medium">Click, drag, or paste</span>
+          </div>
+        )}
+        <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+          <Camera size={24} className="text-white" />
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-muted">{hint}</span>
+        {preview && (
+          <span className={cn("font-mono font-semibold", isOverLimit ? "text-rose-500" : "text-emerald-500")}>
+            {formatBytes(preview.length)} / {formatBytes(limit)}
+          </span>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.[0]) onFile(e.target.files[0]);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
 export default function EditProfileMediaDialog({ currentAvatarUrl, currentBannerUrl, onSaved, onClose }: EditProfileMediaDialogProps) {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentAvatarUrl);
   const [bannerPreview, setBannerPreview] = useState<string | null>(currentBannerUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track whether the user has changed anything
+  const [dirty, setDirty] = useState(false);
+  const isDirty = dirty || avatarPreview !== currentAvatarUrl || bannerPreview !== currentBannerUrl;
+  const isOverLimit = (avatarPreview?.length ?? 0) > AVATAR_LIMIT || (bannerPreview?.length ?? 0) > BANNER_LIMIT;
 
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
-
-  const handleAvatarFile = async (file: File | null) => {
-    if (!file) return;
+  const handleAvatarFile = async (file: File) => {
     setError(null);
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
-      setError("Avatar must be a JPG, PNG or WebP.");
-      return;
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      setError("Avatar file is too large. Max 8 MB.");
-      return;
+      setError("Avatar must be a JPG, PNG or WebP."); return;
     }
     try {
-      const dataUrl = await compressImage(file, 200, 200);
+      const dataUrl = await compressImage(file, 200, 200, AVATAR_LIMIT);
       setAvatarPreview(dataUrl);
+      setDirty(true);
     } catch {
       setError("Could not read that avatar. Try another file.");
     }
   };
 
-  const handleBannerFile = async (file: File | null) => {
-    if (!file) return;
+  const handleBannerFile = async (file: File) => {
     setError(null);
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
-      setError("Banner must be a JPG, PNG or WebP.");
-      return;
-    }
-    if (file.size > 15 * 1024 * 1024) {
-      setError("Banner file is too large. Max 15 MB.");
-      return;
+      setError("Banner must be a JPG, PNG or WebP."); return;
     }
     try {
-      const dataUrl = await compressImage(file, 1200, 300);
+      const dataUrl = await compressImage(file, 1200, 400, BANNER_LIMIT);
       setBannerPreview(dataUrl);
+      setDirty(true);
     } catch {
       setError("Could not read that banner. Try another file.");
     }
   };
 
   const save = async () => {
+    if (isOverLimit) return;
     setBusy(true);
     setError(null);
     try {
@@ -106,14 +209,23 @@ export default function EditProfileMediaDialog({ currentAvatarUrl, currentBanner
       }
       onSaved({ avatarUrl: avatarPreview, bannerUrl: bannerPreview });
       onClose();
-    } catch {
-      setError("Failed to save. Please try again.");
+    } catch (err: unknown) {
+      console.error("Save failed:", err);
+      if (err instanceof ApiError) {
+        if (err.code === "AVATAR_TOO_LARGE" || err.code === "BANNER_TOO_LARGE") {
+          setError("Image is too large. Try a smaller file or crop it.");
+        } else if (err.code === "INVALID_AVATAR_FORMAT" || err.code === "INVALID_BANNER_FORMAT") {
+          setError("Invalid image format.");
+        } else {
+          setError(`Save failed: ${err.code}`);
+        }
+      } else {
+        setError("Failed to save. Please check the console.");
+      }
     } finally {
       setBusy(false);
     }
   };
-
-  const isDirty = avatarPreview !== currentAvatarUrl || bannerPreview !== currentBannerUrl;
 
   return (
     <Modal
@@ -134,7 +246,7 @@ export default function EditProfileMediaDialog({ currentAvatarUrl, currentBanner
           <button
             type="button"
             onClick={() => void save()}
-            disabled={busy || !isDirty}
+            disabled={busy || !isDirty || isOverLimit}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-foreground py-2.5 text-[13px] font-semibold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy && <LoaderCircle size={14} className="animate-spin" />}
@@ -145,85 +257,27 @@ export default function EditProfileMediaDialog({ currentAvatarUrl, currentBanner
     >
       <div className="space-y-6 px-6 py-5">
         
-        {/* Banner Section */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[13px] font-semibold text-foreground">Profile Banner</h3>
-            {bannerPreview && (
-              <button
-                type="button"
-                onClick={() => setBannerPreview(null)}
-                className="inline-flex items-center gap-1 text-[12px] font-medium text-rose-500 hover:underline"
-              >
-                <Trash2 size={12} /> Remove
-              </button>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => bannerInputRef.current?.click()}
-            className="group relative flex aspect-[4/1] w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-surface transition-opacity hover:opacity-90"
-          >
-            {bannerPreview ? (
-              <img src={bannerPreview} alt="Banner preview" className="size-full object-cover" />
-            ) : (
-              <span className="text-[13px] text-muted">Click to upload a banner (1200×300)</span>
-            )}
-            <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-              <Camera size={24} className="text-white" />
-            </span>
-          </button>
-          <input
-            ref={bannerInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={(e) => void handleBannerFile(e.target.files?.[0] ?? null)}
-          />
-        </div>
+        <DropZone 
+          label="Profile Banner"
+          hint="Recommended: 1200x400px. Max 300KB."
+          preview={bannerPreview}
+          onFile={handleBannerFile}
+          onPaste={handleBannerFile}
+          onRemove={() => { setBannerPreview(null); setDirty(true); }}
+          aspect="banner"
+          limit={BANNER_LIMIT}
+        />
 
-        {/* Avatar Section */}
         <div className="border-t border-border pt-6">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[13px] font-semibold text-foreground">Profile Picture</h3>
-            {avatarPreview && (
-              <button
-                type="button"
-                onClick={() => setAvatarPreview(null)}
-                className="inline-flex items-center gap-1 text-[12px] font-medium text-rose-500 hover:underline"
-              >
-                <Trash2 size={12} /> Remove
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-6">
-            <button
-              type="button"
-              onClick={() => avatarInputRef.current?.click()}
-              className="group relative size-24 shrink-0 overflow-hidden rounded-full border border-border bg-surface transition-opacity hover:opacity-90"
-            >
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Avatar preview" className="size-full object-cover" />
-              ) : (
-                <div className="flex size-full items-center justify-center text-muted">
-                  <Camera size={32} />
-                </div>
-              )}
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <Camera size={24} className="text-white" />
-              </span>
-            </button>
-            <div className="text-[12px] leading-relaxed text-muted">
-              <p>Square image, resized to 200×200.</p>
-              <p>JPG, PNG or WebP. Max 8 MB.</p>
-            </div>
-          </div>
-          <input
-            ref={avatarInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={(e) => void handleAvatarFile(e.target.files?.[0] ?? null)}
+          <DropZone 
+            label="Profile Picture"
+            hint="Square image. Max 140KB."
+            preview={avatarPreview}
+            onFile={handleAvatarFile}
+            onPaste={handleAvatarFile}
+            onRemove={() => { setAvatarPreview(null); setDirty(true); }}
+            aspect="square"
+            limit={AVATAR_LIMIT}
           />
         </div>
 
