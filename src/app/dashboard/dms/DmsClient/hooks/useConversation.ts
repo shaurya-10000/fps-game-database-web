@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 
 export type Selection =
@@ -19,6 +20,9 @@ async function resolveDm(playerId: string, knownName?: string): Promise<Selectio
 export function useConversation(onError: (message: string) => void) {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const openDm = useCallback(
     async (playerId: string, knownName?: string) => {
@@ -38,14 +42,16 @@ export function useConversation(onError: (message: string) => void) {
   const close = useCallback(() => setSelection(null), []);
 
   // Deep link from other pages: /dashboard/dms?dm=<playerId>
+  // Reads searchParams so it re-runs when the URL changes (e.g. from notification click).
   useEffect(() => {
-    const target = new URLSearchParams(window.location.search).get("dm");
+    const target = searchParams.get("dm");
     if (!target) return;
-    window.history.replaceState(null, "", window.location.pathname);
+    // Clean the URL so a refresh doesn't re-open the same DM
+    router.replace(pathname);
     resolveDm(target)
       .then((next) => setSelection(next))
       .catch(() => onError(OPEN_FAILED));
-  }, [onError]);
+  }, [searchParams, pathname, router, onError]);
 
   return { selection, openingId, openDm, openGroup, close };
 }
