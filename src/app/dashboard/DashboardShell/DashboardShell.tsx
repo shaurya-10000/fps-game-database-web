@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { PanelLeftOpen, PanelLeftClose, Home, LayoutDashboard, Users, MessageSquare, Settings, Crown, Search, VolumeX, MoreVertical } from "lucide-react";
+import { PanelLeftOpen, PanelLeftClose, Home, LayoutDashboard, Users, MessageSquare, Globe, Crown, Search, VolumeX, MoreVertical } from "lucide-react";
 import AuthGate from "../AuthGate";
 import FloatingSidebar, { type SidebarItem } from "@/components/DashboardSidebar/FloatingSidebar";
 import { clearToken } from "@/lib/auth";
@@ -15,7 +15,7 @@ const NAV_ITEMS: readonly SidebarItem<NavId>[] = [
   { id: "profile", label: "Profile", icon: LayoutDashboard },
   { id: "dms", label: "Messages", icon: MessageSquare },
   { id: "friends", label: "Friends", icon: Users },
-  { id: "chat", label: "Global Chat", icon: Settings },
+  { id: "chat", label: "Global Chat", icon: Globe },
 ] as const;
 
 const ROUTE_MAP: Record<NavId, string> = {
@@ -218,6 +218,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
+
 
 
 
