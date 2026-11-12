@@ -170,7 +170,7 @@ export default function MessageList({
           role="log"
           aria-live="polite"
           aria-label={`Conversation with ${peerName}`}
-          className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-end"
+          className={`flex min-h-full w-full flex-col ${rows.length === 0 && !loading ? "justify-center" : "justify-end"}`}
         >
           {hasMore && !loading && (
             <div className="mb-2 flex justify-center">
@@ -189,7 +189,7 @@ export default function MessageList({
           {loading && empty && <MessagesSkeleton />}
 
           {!loading && empty && (
-            <div className="flex-1">
+            <div className="flex flex-1 flex-col justify-center items-center h-full">
               <EmptyState
                 icon={Hand}
                 title={emptyTitle ?? "No messages yet"}
@@ -260,3 +260,6 @@ export default function MessageList({
     </div>
   );
 }
+
+
+

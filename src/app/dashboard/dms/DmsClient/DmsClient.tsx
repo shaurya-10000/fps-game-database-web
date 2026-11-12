@@ -18,7 +18,7 @@ import Composer from "./Composer";
 import ConversationHeader from "./ConversationHeader";
 import ConversationList from "./ConversationList";
 import GroupPickerDialog from "./dialogs/GroupPickerDialog";
-import MessageList from "./MessageList";
+import MessageList from "@/app/dashboard/dms/DmsClient/MessageList/MessageList";
 import PinnedBar from "./PinnedBar";
 import GroupInfoPanel from "./panels/GroupInfoPanel";
 import PinsPanel from "./panels/PinsPanel";
@@ -387,7 +387,7 @@ export default function DmsClient() {
   );
 
   return (
-    <div className="absolute inset-0 flex overflow-hidden bg-background">
+    <div className="flex h-full w-full overflow-hidden bg-background">
       <ConversationList
         friends={friends}
         groups={groups}
@@ -491,7 +491,7 @@ export default function DmsClient() {
               />
 
               <div className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-6 sm:pb-4">
-                <div className="mx-auto w-full max-w-3xl">
+                <div className="w-full px-4 sm:px-8">
                   <TypingIndicator names={typingNames} />
                   <Composer
                     key={roomId}
@@ -684,3 +684,10 @@ export default function DmsClient() {
     </div>
   );
 }
+
+
+
+
+
+
+

@@ -14,7 +14,7 @@ import { uploadVoiceMessage } from "@/lib/chat-api";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Composer from "@/app/dashboard/dms/DmsClient/Composer";
-import MessageList from "@/app/dashboard/dms/DmsClient/MessageList";
+import MessageList from "@/app/dashboard/dms/DmsClient/MessageList/MessageList";
 import SearchPanel from "@/app/dashboard/dms/DmsClient/panels/SearchPanel";
 import { useChatPrefs } from "@/app/dashboard/dms/DmsClient/hooks/useChatPrefs";
 import { useDraftStore } from "@/app/dashboard/dms/DmsClient/hooks/useDraftStore";
@@ -246,8 +246,8 @@ export default function GlobalChatClient() {
   ];
 
   return (
-    <div className="absolute inset-0 flex overflow-hidden bg-background">
-      <div className="flex min-w-0 flex-1 flex-col" style={chatContainerStyle(theme, settings.fontSize)}>
+    <div className="flex h-full w-full overflow-hidden bg-background">
+      <div className="flex min-w-0 flex-1 flex-col bg-background" style={chatContainerStyle(theme, settings.fontSize)}>
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4 sm:px-6">
           <button
             type="button"
@@ -361,7 +361,7 @@ export default function GlobalChatClient() {
         />
 
         <div className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-6 sm:pb-4">
-          <div className="mx-auto w-full max-w-3xl">
+          <div className="w-full px-4 sm:px-8">
             <TypingIndicator names={typingNames} />
             <Composer
               placeholder="Message #global"
@@ -434,3 +434,8 @@ export default function GlobalChatClient() {
     </div>
   );
 }
+
+
+
+
+

@@ -30,7 +30,7 @@ export default function ProfileClient() {
   if (profile.loading) return <ProfileSkeleton />;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <h1 className="sr-only">Your profile</h1>
 
       {profile.failed && (
@@ -94,3 +94,4 @@ export default function ProfileClient() {
     </div>
   );
 }
+
