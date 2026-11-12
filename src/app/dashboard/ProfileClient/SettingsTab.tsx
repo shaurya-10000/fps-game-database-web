@@ -7,6 +7,7 @@ import { updateChatSettings, useChatSettings } from "@/lib/chat-settings";
 import { cn } from "@/lib/utils";
 import Card from "./Card";
 import type { ProfileIdentity } from "./types";
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 
 interface SettingsTabProps {
   identity: ProfileIdentity;
@@ -61,29 +62,17 @@ export default function SettingsTab({ identity, onEdit, onChatSettings }: Settin
 
       <Card title="Chat" icon={MessageCircle}>
         <div className="divide-y divide-border">
-          <div className="flex items-start gap-4 py-3">
+          <div 
+            className="flex items-start gap-4 py-3 cursor-pointer" 
+            onClick={() => updateChatSettings({ globalChat: !settings.globalChat })}
+          >
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-medium text-foreground">Show Global Chat</p>
               <p className="mt-0.5 text-[12px] leading-snug text-muted">Turn it off to hide Global Chat from the sidebar. Your DMs are not affected.</p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={settings.globalChat}
-              aria-label="Show Global Chat"
-              onClick={() => updateChatSettings({ globalChat: !settings.globalChat })}
-              className={cn(
-                "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
-                settings.globalChat ? "bg-accent" : "bg-foreground/20",
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute top-0.5 size-5 rounded-full bg-background shadow transition-transform",
-                  settings.globalChat ? "translate-x-[1.375rem]" : "translate-x-0.5",
-                )}
-              />
-            </button>
+            <div className="mt-0.5">
+              <ToggleSwitch enabled={settings.globalChat} />
+            </div>
           </div>
           <div className="flex items-center gap-4 py-3">
             <div className="flex min-w-0 flex-1 items-center gap-3">

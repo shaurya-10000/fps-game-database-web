@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { isSnoozed, updateChatSettings, useChatSettings, type FontSize } from "@/lib/chat-settings";
 import { useNotificationPermission } from "../hooks/useNotificationPermission";
 import Modal from "../ui/Modal";
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 
 interface SwitchRowProps {
   label: string;
@@ -14,29 +15,14 @@ interface SwitchRowProps {
 
 function SwitchRow({ label, description, checked, onChange }: SwitchRowProps) {
   return (
-    <div className="flex items-start gap-4 py-3">
+    <div className="flex items-start gap-4 py-3 cursor-pointer" onClick={() => onChange(!checked)}>
       <div className="min-w-0 flex-1">
         <div className="text-[14px] font-medium text-foreground">{label}</div>
         {description && <p className="mt-0.5 text-[12px] leading-snug text-muted">{description}</p>}
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={cn(
-          "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
-          checked ? "bg-accent" : "bg-foreground/20",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-0.5 size-5 rounded-full bg-background shadow transition-transform",
-            checked ? "translate-x-[1.375rem]" : "translate-x-0.5",
-          )}
-        />
-      </button>
+      <div className="mt-0.5">
+        <ToggleSwitch enabled={checked} />
+      </div>
     </div>
   );
 }
