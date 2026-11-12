@@ -76,7 +76,7 @@ export default function FriendsClient() {
       : `${data.friends.length} friend${data.friends.length === 1 ? "" : "s"} - ${onlineCount} online`;
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Social</div>
@@ -214,6 +214,7 @@ export default function FriendsClient() {
     </div>
   );
 }
+
 
 
 

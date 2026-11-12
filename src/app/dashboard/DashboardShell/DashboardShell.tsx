@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LayoutDashboard, Users, MessageSquare, Settings, Crown } from "lucide-react";
 import AuthGate from "../AuthGate";
 import FloatingSidebar, { type SidebarItem } from "@/components/DashboardSidebar/FloatingSidebar";
+import SidebarStrip from "@/components/DashboardSidebar/SidebarStrip";
 import { clearToken } from "@/lib/auth";
 
 type NavId = "profile" | "dms" | "friends" | "chat";
@@ -74,27 +75,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }, [router]);
 
-
-
   return (
     <AuthGate>
       <div className="flex h-dvh overflow-hidden bg-background">
-        <button
-          ref={triggerRef}
-          type="button"
-          onClick={() => setIsOpen(true)}
-          aria-label="Open menu"
-          aria-expanded={isOpen}
-          aria-controls="dashboard-sidebar"
-          className="fixed left-3 top-3 z-50 flex size-10 items-center justify-center rounded-xl border border-border bg-background/80 text-foreground shadow-md backdrop-blur-md transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
+        {/* Fixed Left Strip (64px wide) */}
+        <SidebarStrip onOpenMenu={() => setIsOpen(true)} onSignOut={signOut} triggerRef={triggerRef} />
 
+        {/* Floating Drawer (slides in over the content) */}
         <FloatingSidebar<NavId>
           id="dashboard-sidebar"
           drawerRef={drawerRef}
@@ -118,6 +105,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           }
         />
 
+        {/* Main Content */}
         <div
           className={
             fullBleed
@@ -128,7 +116,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           {fullBleed ? (
             children
           ) : (
-            <div className="w-full px-5 py-8 sm:px-8 lg:px-12">
+            <div className="w-full px-6 py-8 sm:px-8">
               {children}
             </div>
           )}
@@ -137,7 +125,3 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
-
-
-
-
