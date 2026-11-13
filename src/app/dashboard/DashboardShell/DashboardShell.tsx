@@ -108,10 +108,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   return (
     <AuthGate>
-      <div className="flex h-dvh flex-col overflow-hidden bg-background">
+      <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-background">
         
         {/* Top Navigation Bar */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4 dark:border-white/[0.04] sm:px-6">
+        <header className="flex h-16 w-full shrink-0 items-center justify-between border-b border-border px-4 dark:border-white/[0.04] sm:px-6">
           <div className="flex items-center gap-4">
             <button
               ref={triggerRef}
@@ -202,8 +202,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         <main
           className={
             fullBleed
-              ? "relative min-h-0 flex-1 overflow-hidden"
-              : "min-h-0 flex-1 overflow-y-auto"
+              ? "relative min-h-0 w-full flex-1 overflow-hidden"
+              : "min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
           }
         >
           {fullBleed ? (
@@ -218,6 +218,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
+
 
 
 
