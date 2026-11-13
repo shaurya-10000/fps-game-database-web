@@ -73,7 +73,7 @@ export default function SettingsMenu() {
   }, []);
 
   if (!mounted) {
-    return <button className="rounded-md border border-border p-1.5 text-muted" disabled><span className="block size-4" /></button>;
+    return <button className="flex size-8 items-center justify-center rounded-md text-muted" disabled><span className="block size-4" /></button>;
   }
 
   const isDark = theme === "dark";
@@ -82,8 +82,8 @@ export default function SettingsMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`rounded-md border p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
-          isOpen ? "border-accent bg-accent/10 text-accent" : "border-border text-muted hover:text-foreground"
+        className={`flex size-8 cursor-pointer items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+          isOpen ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground"
         }`}
         aria-label="Settings"
         aria-expanded={isOpen}
@@ -114,3 +114,4 @@ export default function SettingsMenu() {
     </div>
   );
 }
+

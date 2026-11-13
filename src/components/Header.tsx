@@ -155,7 +155,7 @@ export default function Header() {
             </Link>
 
             {/* 2. Notifications */}
-            <button type="button" onClick={() => setNotificationsOpen(true)} aria-label="Notifications" title="Notifications" className="relative flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground">
+            <button type="button" onClick={() => setNotificationsOpen(true)} aria-label="Notifications" title="Notifications" className="relative flex size-8 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground">
               <Bell size={16} />
               {unreadCount > 0 && (
                 <span className="absolute right-0 top-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
@@ -169,7 +169,7 @@ export default function Header() {
               <button 
                 type="button" 
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={cn("group relative inline-flex size-8 items-center justify-center gap-1 rounded-md font-heading text-[15px] font-bold uppercase tracking-wider transition-colors duration-300 sm:text-[16px] md:w-auto md:px-3 md:py-1.5 md:justify-start", (isDatabaseActive || dropdownOpen) ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground")}
+                className={cn("group relative inline-flex size-8 cursor-pointer items-center justify-center gap-1 rounded-md font-heading text-[15px] font-bold uppercase tracking-wider transition-colors duration-300 sm:text-[16px] md:w-auto md:px-3 md:py-1.5 md:justify-start", (isDatabaseActive || dropdownOpen) ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground")}
               >
                 <Crosshair size={16} className="md:hidden" />
                 <span className="hidden md:inline">Database</span>
@@ -251,5 +251,6 @@ export default function Header() {
     </>
   );
 }
+
 
 
