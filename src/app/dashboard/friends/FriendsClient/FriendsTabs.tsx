@@ -44,7 +44,7 @@ export default function FriendsTabs({ value, onChange, friendsCount, requestsCou
   };
 
   return (
-    <div role="tablist" aria-label="Friends sections" className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-surface/30 p-1.5 sm:flex sm:gap-1">
+    <div role="tablist" aria-label="Friends sections" className="grid grid-cols-2 gap-2 rounded-full border border-border bg-surface/30 p-1.5 sm:flex sm:gap-1">
       {tabs.map((tab, index) => {
         const active = tab.id === value;
         return (
@@ -62,7 +62,7 @@ export default function FriendsTabs({ value, onChange, friendsCount, requestsCou
             onClick={() => onChange(tab.id)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={cn(
-              "relative flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
+              "relative flex items-center justify-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
               active 
                 ? "bg-background text-foreground shadow-sm ring-1 ring-border" 
@@ -87,3 +87,6 @@ export default function FriendsTabs({ value, onChange, friendsCount, requestsCou
     </div>
   );
 }
+
+
+

@@ -54,12 +54,12 @@ export default function FriendRow({
   ];
 
   return (
-    <li className="group flex items-center gap-1 rounded-2xl border border-border bg-surface pl-3 pr-1.5 transition-colors hover:border-foreground/20 sm:pl-4 sm:pr-2">
+    <li className="group flex h-16 items-center gap-1 rounded-full border border-border bg-surface pl-3 pr-2 transition-colors hover:border-foreground/20 hover:bg-foreground/[0.02] sm:pl-4 sm:pr-3">
       <button
         type="button"
         onClick={onMessage}
         aria-label={`Message ${friend.name}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        className="flex h-full min-w-0 flex-1 items-center gap-3 rounded-full pl-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
       >
         <span className="relative shrink-0">
           <ChatAvatar name={friend.name} size={44} avatarUrl={friend.avatarUrl} />
@@ -109,3 +109,4 @@ export default function FriendRow({
     </li>
   );
 }
+

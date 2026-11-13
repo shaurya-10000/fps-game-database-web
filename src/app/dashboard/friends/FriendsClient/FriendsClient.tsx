@@ -102,7 +102,7 @@ export default function FriendsClient() {
         blockedCount={data.blocked.length}
       />
 
-      <div role="tabpanel" id={`friends-panel-${tab}`} aria-labelledby={`friends-tab-${tab}`} className="min-h-[400px] w-full rounded-2xl border border-border bg-surface/30 p-6 sm:p-8">
+      <div role="tabpanel" id={`friends-panel-${tab}`} aria-labelledby={`friends-tab-${tab}`} className="min-h-[400px] w-full rounded-[2rem] border border-border bg-surface/30 p-6 sm:p-8">
         {tab === "friends" && (
           <FriendsList
             friends={data.friends}
@@ -195,6 +195,9 @@ export default function FriendsClient() {
     </div>
   );
 }
+
+
+
 
 
 

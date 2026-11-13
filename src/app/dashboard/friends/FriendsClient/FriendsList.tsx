@@ -109,10 +109,10 @@ export default function FriendsList({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search your friends"
-            className="w-full rounded-xl border border-border bg-surface py-2.5 pl-9 pr-3 text-base text-foreground placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-[14px]"
+            className="w-full rounded-full border border-border bg-surface py-2.5 pl-9 pr-4 text-base text-foreground placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-[14px]"
           />
         </label>
-        <div role="group" aria-label="Filter friends" className="flex gap-1 rounded-xl border border-border bg-surface p-1">
+        <div role="group" aria-label="Filter friends" className="flex gap-1 rounded-full border border-border bg-surface p-1">
           {[
             { id: false, label: `All (${friends.length})` },
             { id: true, label: `Online (${onlineCount})` },
@@ -123,7 +123,7 @@ export default function FriendsList({
               aria-pressed={onlineOnly === option.id}
               onClick={() => setOnlineOnly(option.id)}
               className={cn(
-                "flex-1 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors sm:flex-none",
+                "flex-1 rounded-full px-4 py-1.5 text-[12px] font-medium transition-colors sm:flex-none",
                 onlineOnly === option.id ? "bg-background text-foreground shadow-sm" : "text-muted hover:text-foreground",
               )}
             >
@@ -162,3 +162,4 @@ export default function FriendsList({
     </div>
   );
 }
+
