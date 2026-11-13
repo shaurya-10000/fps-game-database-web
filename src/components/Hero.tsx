@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { ArrowRight, LayoutDashboard, Target, Crosshair, Zap, Flame, MousePointerClick, Activity, Timer, BrainCircuit, RotateCcw, LocateFixed } from "lucide-react";
+import { ArrowRight, LayoutDashboard, Target, Crosshair, Zap, Flame, MousePointerClick, Activity, Timer, BrainCircuit, RotateCcw, LocateFixed, MessageSquare, Users } from "lucide-react";
 import { getToken, isTokenValid } from "@/lib/auth";
 
 const emptySubscribe = () => () => {};
@@ -301,16 +301,25 @@ export default function Hero() {
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="mt-8 max-w-md text-[16px] leading-relaxed text-muted">
             Chat with your squad, call them in real-time, climb the leaderboard, and look up any weapon, map, or operator in the game. Built for players, by players.
           </motion.p>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-12 flex flex-wrap items-center gap-5">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-12 flex flex-wrap items-center gap-3">
             {!mounted ? (
-              <div className="h-12 w-48 animate-pulse rounded-full bg-foreground/10" />
+              <div className="h-14 w-48 animate-pulse rounded-2xl bg-foreground/10" />
             ) : isLoggedIn ? (
-              <Link href="/dashboard" className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]">
-                <LayoutDashboard className="size-4" /> Open dashboard <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-              </Link>
+              <>
+                <Link href="/dashboard" className="group inline-flex h-14 items-center gap-3 rounded-2xl bg-foreground px-8 text-[15px] font-bold text-background shadow-xl transition-all hover:scale-[1.02] hover:shadow-2xl">
+                  <LayoutDashboard className="size-5" /> Dashboard 
+                  <ArrowRight className="size-4 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
+                </Link>
+                <Link href="/dashboard/friends" className="group inline-flex h-14 items-center gap-3 rounded-2xl border border-border/80 bg-surface/50 px-6 text-[15px] font-semibold text-foreground backdrop-blur-md transition-all hover:border-border hover:bg-surface">
+                  <Users className="size-5 text-muted transition-colors group-hover:text-accent" /> Friends
+                </Link>
+                <Link href="/dashboard/dms" className="group inline-flex h-14 items-center gap-3 rounded-2xl border border-border/80 bg-surface/50 px-6 text-[15px] font-semibold text-foreground backdrop-blur-md transition-all hover:border-border hover:bg-surface">
+                  <MessageSquare className="size-5 text-muted transition-colors group-hover:text-accent" /> Messages
+                </Link>
+              </>
             ) : (
-              <Link href="/dashboard/login" className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-foreground px-7 text-[14px] font-bold text-background transition-transform hover:scale-[1.02]">
-                Create free account <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              <Link href="/dashboard/login" className="group inline-flex h-14 items-center gap-3 rounded-2xl bg-foreground px-8 text-[15px] font-bold text-background shadow-xl transition-all hover:scale-[1.02] hover:shadow-2xl">
+                Create free account <ArrowRight className="size-4 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
               </Link>
             )}
           </motion.div>
@@ -574,3 +583,7 @@ export default function Hero() {
     </section>
   );
 }
+
+
+
+
