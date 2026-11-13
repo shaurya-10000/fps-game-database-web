@@ -259,7 +259,7 @@ export default function GlobalChatClient() {
   }, [headerItems]);
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background" style={chatContainerStyle(theme, settings.fontSize)}>
+    <div className="absolute inset-0 flex w-full overflow-hidden bg-background" style={chatContainerStyle(theme, settings.fontSize)}>
       
       {/* Hidden trigger that the top-bar three dots clicks */}
       <div className="hidden">
@@ -402,6 +402,7 @@ export default function GlobalChatClient() {
     </div>
   );
 }
+
 
 
 

@@ -387,7 +387,7 @@ export default function DmsClient() {
   );
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background">
+    <div className="absolute inset-0 flex w-full overflow-hidden bg-background">
       <ConversationList
         friends={friends}
         groups={groups}
@@ -553,7 +553,7 @@ export default function DmsClient() {
             )}
           </>
         ) : (
-          <div className="flex h-full w-full flex-1 items-center justify-center">
+          <div className="flex h-full w-full flex-1 items-center justify-center overflow-hidden">
             <EmptyState
               icon={MessageCircle}
               title="Select a conversation"
@@ -684,6 +684,7 @@ export default function DmsClient() {
     </div>
   );
 }
+
 
 
 

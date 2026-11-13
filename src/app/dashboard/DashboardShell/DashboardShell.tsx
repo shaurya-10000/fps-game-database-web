@@ -202,8 +202,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         <main
           className={
             fullBleed
-              ? "relative min-h-0 w-full flex-1 overflow-hidden"
-              : "min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
+              ? "relative min-h-0 w-full flex-1 overflow-hidden bg-background"
+              : "min-h-0 w-full flex-1 overflow-y-auto overscroll-contain bg-background"
           }
         >
           {fullBleed ? (
@@ -218,6 +218,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </AuthGate>
   );
 }
+
 
 
 
