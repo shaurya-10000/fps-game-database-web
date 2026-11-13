@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowRight, LayoutDashboard, Target, Crosshair, Zap, Flame, MousePointerClick, Activity, Timer, BrainCircuit, RotateCcw, LocateFixed, MessageSquare, Users } from "lucide-react";
 import { getToken, isTokenValid } from "@/lib/auth";
+import { useTheme } from "next-themes";
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
@@ -15,8 +16,10 @@ function getRandom() {
 }
 
 export default function Hero() {
+  const { resolvedTheme } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+  const isLight = mounted && resolvedTheme === "light";
   const [activeTab, setActiveTab] = useState<"aim" | "click" | "reaction" | "memory" | "track">("aim");
 
   // --- Grid cursor state ---
@@ -265,7 +268,7 @@ export default function Hero() {
         <div 
           className="absolute inset-0 opacity-[0.04]"
           style={{
-            backgroundImage: "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundImage: `linear-gradient(to right, ${isLight ? "#0a0a0a" : "#fff"} 1px, transparent 1px), linear-gradient(to bottom, ${isLight ? "#0a0a0a" : "#fff"} 1px, transparent 1px)`,
             backgroundSize: "64px 64px",
           }}
         />
@@ -274,7 +277,7 @@ export default function Hero() {
         <motion.div
           className="absolute inset-0"
           style={{
-            backgroundImage: "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundImage: `linear-gradient(to right, ${isLight ? "#0a0a0a" : "#fff"} 1px, transparent 1px), linear-gradient(to bottom, ${isLight ? "#0a0a0a" : "#fff"} 1px, transparent 1px)`,
             backgroundSize: "64px 64px",
             opacity: 0.22,
             maskImage: useTransform(
@@ -583,6 +586,8 @@ export default function Hero() {
     </section>
   );
 }
+
+
 
 
 

@@ -155,7 +155,7 @@ export default function Header() {
             </Link>
 
             {/* 2. Notifications */}
-            <button type="button" onClick={() => setNotificationsOpen(true)} aria-label="Notifications" title="Notifications" className="relative flex size-9 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground">
+            <button type="button" onClick={() => setNotificationsOpen(true)} aria-label="Notifications" title="Notifications" suppressHydrationWarning className="relative flex size-9 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground">
               <Bell size={18} />
               {unreadCount > 0 && (
                 <span className="absolute right-0 top-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
@@ -251,6 +251,7 @@ export default function Header() {
     </>
   );
 }
+
 
 
 

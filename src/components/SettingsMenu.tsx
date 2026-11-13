@@ -81,6 +81,7 @@ export default function SettingsMenu() {
   return (
     <div className="relative" ref={menuRef}>
       <button
+        suppressHydrationWarning
         onClick={() => setIsOpen(!isOpen)}
         className={`flex size-9 cursor-pointer items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
           isOpen ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground"
@@ -114,5 +115,6 @@ export default function SettingsMenu() {
     </div>
   );
 }
+
 
 

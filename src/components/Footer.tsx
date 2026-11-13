@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Crown, Code, MessageCircle, Globe } from "lucide-react";
+import { ArrowRight, Crown, Gamepad2, MessagesSquare, Video, Code } from "lucide-react";
 
 const CURRENT_YEAR = 2026;
 
@@ -25,21 +25,16 @@ const COLUMNS = [
       { href: "/modes?bucket=ranked", label: "Ranked Modes" },
     ],
   },
+
+
+
   {
-    title: "Community",
+    title: "Player Hub",
     links: [
-      { href: "/dashboard", label: "Player Dashboard" },
-      { href: "/dashboard/friends", label: "Find Friends" },
+      { href: "/dashboard", label: "My Profile" },
+      { href: "/dashboard/friends", label: "Friends List" },
       { href: "/dashboard/dms", label: "Messages" },
       { href: "/dashboard/chat", label: "Global Chat" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { href: "/catalog", label: "Full Catalog" },
-      { href: "/about", label: "About" },
-      { href: "/changelog", label: "Changelog" },
     ],
   },
 ] as const;
@@ -83,16 +78,22 @@ export default function Footer() {
               </form>
             </div>
 
-            <div className="mt-4 flex items-center gap-4">
-              <Link href="#" aria-label="GitHub" className="text-muted transition-colors hover:text-foreground">
-                <Code size={20} />
-              </Link>
-              <Link href="#" aria-label="Twitter" className="text-muted transition-colors hover:text-foreground">
-                <MessageCircle size={20} />
-              </Link>
-              <Link href="#" aria-label="Twitch" className="text-muted transition-colors hover:text-foreground">
-                <Globe size={20} />
-              </Link>
+            <div className="mt-4 flex flex-col gap-3">
+              <p className="text-[13px] font-semibold text-foreground">Follow the Meta</p>
+              <div className="flex items-center gap-4">
+                <Link href="#" aria-label="Discord" className="text-muted transition-colors hover:text-foreground">
+                  <MessagesSquare size={20} />
+                </Link>
+                <Link href="#" aria-label="Twitch" className="text-muted transition-colors hover:text-foreground">
+                  <Gamepad2 size={20} />
+                </Link>
+                <Link href="#" aria-label="YouTube" className="text-muted transition-colors hover:text-foreground">
+                  <Video size={20} />
+                </Link>
+                <Link href="#" aria-label="Developer API" className="text-muted transition-colors hover:text-foreground">
+                  <Code size={20} />
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -123,25 +124,24 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-[12px] tracking-[-0.01em] text-muted sm:flex-row">
           <p>
-            © {CURRENT_YEAR} FPS Game Database. All content is original IP.
+            © {CURRENT_YEAR} FPS Game Database. All rights reserved.
           </p>
           
           <div className="flex items-center gap-6">
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
-            <div className="flex items-center gap-2 border-l border-border pl-6">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
-              </span>
-              <span>All systems operational</span>
-            </div>
           </div>
         </div>
       </div>
     </footer>
   );
 }
+
+
+
+
+
+
 
 
 
