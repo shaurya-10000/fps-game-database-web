@@ -34,7 +34,7 @@ export default function Tabs<T extends string>({ tabs, value, onChange, idPrefix
   };
 
   return (
-    <div role="tablist" aria-label="Profile sections" className="flex gap-1 overflow-x-auto border-b border-border">
+    <div role="tablist" aria-label="Profile sections" className="flex gap-1 overflow-x-auto border-b border-border [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       {tabs.map((tab, index) => {
         const active = tab.id === value;
         return (
