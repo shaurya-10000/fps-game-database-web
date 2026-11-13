@@ -66,11 +66,11 @@ function PillLink({ href, active, icon: Icon, children }: { href: string; active
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-2 font-heading rounded-md px-3 py-1.5 text-[15px] font-bold uppercase tracking-wider transition-colors",
+        "flex items-center gap-2 font-heading rounded-md px-3.5 py-2 text-[15px] font-bold uppercase tracking-wider transition-colors",
         active ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:text-foreground"
       )}
     >
-      {Icon && <Icon size={16} />}
+      {Icon && <Icon size={18} />}
       <span className="hidden md:inline">{children}</span>
     </Link>
   );
@@ -130,7 +130,7 @@ export default function Header() {
   return (
     <>
       <header className={cn("sticky top-0 z-50 box-border h-[76px] w-full shrink-0 border-b backdrop-blur-xl transition-[background-color,border-color] duration-500", scrolled ? "border-border bg-background" : "border-border/60 bg-background")}>
-        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:px-10 xl:px-16">
+        <div className="flex h-full w-full items-center justify-between px-4 sm:px-6 lg:px-8">
           
           <div className="flex items-center gap-2 sm:gap-4">
             <Brand />
@@ -140,23 +140,23 @@ export default function Header() {
                 href="/" 
                 aria-label="Home"
                 title="Home"
-                className="flex size-8 items-center justify-center rounded-full border border-border bg-surface/50 text-muted transition-colors hover:bg-surface hover:text-foreground"
+                className="flex size-9 items-center justify-center rounded-full border border-border bg-surface/50 text-muted transition-colors hover:bg-surface hover:text-foreground"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={18} />
               </Link>
             )}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-4">
             
             {/* 1. Dashboard Icon */}
-            <Link href="/dashboard" aria-label="Dashboard" title="Dashboard" className={cn("flex size-8 items-center justify-center rounded-md transition-colors", dashboardActive ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground")}>
-              <LayoutDashboard size={16} />
+            <Link href="/dashboard" aria-label="Dashboard" title="Dashboard" className={cn("flex size-9 items-center justify-center rounded-md transition-colors", dashboardActive ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground")}>
+              <LayoutDashboard size={18} />
             </Link>
 
             {/* 2. Notifications */}
-            <button type="button" onClick={() => setNotificationsOpen(true)} aria-label="Notifications" title="Notifications" className="relative flex size-8 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground">
-              <Bell size={16} />
+            <button type="button" onClick={() => setNotificationsOpen(true)} aria-label="Notifications" title="Notifications" className="relative flex size-9 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-foreground/5 hover:text-foreground">
+              <Bell size={18} />
               {unreadCount > 0 && (
                 <span className="absolute right-0 top-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
                   {unreadCount > 99 ? "99+" : unreadCount}
@@ -169,11 +169,11 @@ export default function Header() {
               <button 
                 type="button" 
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={cn("group relative inline-flex size-8 cursor-pointer items-center justify-center gap-1 rounded-md font-heading text-[15px] font-bold uppercase tracking-wider transition-colors duration-300 sm:text-[16px] md:w-auto md:px-3 md:py-1.5 md:justify-start", (isDatabaseActive || dropdownOpen) ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground")}
+                className={cn("group relative inline-flex size-9 cursor-pointer items-center justify-center gap-1.5 rounded-md font-heading text-[15px] font-bold uppercase tracking-wider transition-colors duration-300 sm:text-[16px] md:w-auto md:px-3.5 md:py-2 md:justify-start", (isDatabaseActive || dropdownOpen) ? "bg-foreground/[0.06] text-foreground" : "text-muted hover:bg-foreground/5 hover:text-foreground")}
               >
-                <Crosshair size={16} className="md:hidden" />
+                <Crosshair size={18} className="md:hidden" />
                 <span className="hidden md:inline">Database</span>
-                <ChevronDown size={14} className={cn("hidden md:block transition-transform duration-300 group-hover:rotate-180", dropdownOpen && "rotate-180")} />
+                <ChevronDown size={16} className={cn("hidden md:block transition-transform duration-300 group-hover:rotate-180", dropdownOpen && "rotate-180")} />
               </button>
               
                             {/* Desktop Hover Dropdown (CSS only) */}
@@ -251,6 +251,9 @@ export default function Header() {
     </>
   );
 }
+
+
+
 
 
 
